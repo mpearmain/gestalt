@@ -16,7 +16,6 @@ classification_type_list = ('binary', 'multi-class')
 # PATH 
 # Change main folder name 
 FOLDER_NAME = ''
-PATH = ''
 DATA_PATH = 'input/'
 INPUT_PATH = 'input/'  # path of original data and fold_index
 OUTPUT_PATH = 'output/'
@@ -34,49 +33,6 @@ from sklearn.metrics import log_loss as ll
 from sklearn.metrics import roc_auc_score as AUC
 from sklearn.metrics import mean_squared_error
 
-
-# feature list
-def load_data(flist):
-    """
-    Usage: set train, target, and test key and feature files, pre-processing should be done so that there are not
-    duplicate features in different datasets.
-
-    :param flist: files list
-    :example:
-
-    FEATURE_LIST_stage2 = {
-                'train':(TEMP_PATH + 'v1_stage1_all_fold.csv',
-                         TEMP_PATH + 'v2_stage1_all_fold.csv',
-                         TEMP_PATH + 'v3_stage1_all_fold.csv',), #target is not in 'train'
-
-                'target':(INPUT_PATH + 'target.csv',), #target is in 'target'
-
-                'test':(TEMP_PATH + 'v1_stage1_test.csv',
-                         TEMP_PATH + 'v2_stage1_test.csv',
-                         TEMP_PATH + 'v3_stage1_test.csv',),
-                }
-    """
-    if (len(flist['train']) == 0) or (len(flist['target']) == 0) or (len(flist['test']) == 0):
-        raise Exception('train, target, and test must be set at least one file, respectively.')
-
-    X_train = pd.DataFrame()
-    test = pd.DataFrame()
-
-    print('Reading train dataset')
-    for i in flist['train']:
-        X_train = pd.concat([X_train, pd.read_csv(PATH + i, index_col=0)], axis=1)
-        print('train dataset is created')
-
-    print('Reading target data')
-    y_train = pd.read_csv(PATH + flist['target'][0], index_col=0)
-
-    print('Reading train dataset')
-    for i in flist['test']:
-        test = pd.concat([test, pd.read_csv(PATH + i, index_col=0)], axis=1)
-
-    assert (all(X_train.columns == test.columns))
-    print('Train and test cols align, lets get modelling')
-    return X_train, y_train, test
 
 
 # evaluation function
@@ -98,7 +54,6 @@ def eval_pred(y_true, y_pred, eval_type):
 
 
 # BaseModel Class 
-
 
 class BaseModel(BaseEstimator):
     """
