@@ -1,50 +1,15 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-When running stackers from sklearn the interface to the model api is standardized making it easy to simply add a
-compiled model e.g.
-
-PARAMS_RF = {'n_estimators': 500,
-             'criterion': 'gini',
-             'n_jobs': 8,
-             'verbose': 0,
-             'random_state': 407,
-             'oob_score': True,
-             }
-
-class ModelRF(BaseModel):
-    def build_model(self):
-        return RandomForestClassifier(**self.params)
-
-Other models outside of the sci-kit learn eco-system may have different api interfaces to call and run models
-or (in the case of XGB and Keras) not all parameters are exposed in the sklearn interface they have made.
-
-This is a set of common algorithms with wrappers to be able to run in our generic stacker class.
-
-For each Wrapper class the output from predict or predict_proba should be a pandas dataset.
-
-"""
 import numpy as np
 import pandas as pd
 # Wrapper Class of Classifiers
-from python.generalised_stacking.base import BaseModel
+from base.base import BaseModel
 # BaseEstimator
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin, ClassifierMixin
 
+
 # Keras
 from keras.utils import np_utils
 from keras.callbacks import Callback
-
-# XGBoost
-import xgboost as xgb
-
-from sklearn.metrics import log_loss
-
-# Vowpal Wabbit
-# Make sure libs are built  sudo apt-get install libboost-program-options-dev zlib1g-dev libboost-python-dev
-# import vowpalwabbit as ww
-
 
 class IntervalEvaluation(Callback):
     def __init__(self, validation_data=(), interval=10):
@@ -181,73 +146,7 @@ class KerasClassifier(BaseEstimator, ClassifierMixin):
             return preds
 
 
-class XGBClassifier(BaseEstimator, ClassifierMixin):
-    '''
-    XGBClassifier in xgboost for sklearn doesnt have ALL parameters accessible, a simple wrapper to expose them
-
-    (Example)
-    from base import XGBClassifier
-    class XGBModelV1(XGBClassifier):
-        def __init__(self,**params):
-            super(XGBModelV1, self).__init__(**params)
-
-    a = XGBModelV1(colsample_bytree=0.9,
-                   learning_rate=0.01,
-                   max_depth=5,
-                   min_child_weight=1,
-                   n_estimators=300,
-                   nthread=-1,
-                   objective='binary:logistic',
-                   seed=0,
-                   silent=True,
-                   subsample=0.8)
-    a.fit(X_train, y_train, evals=[(X_train, y_train),(X_test, y_test)])
-
-    '''
-
-    def __init__(self, params={}, num_round=50, early_stopping_rounds=None, verbose_eval=True):
-        self.params = params
-        self.num_round = num_round
-        self.early_stopping_rounds = early_stopping_rounds
-        self.verbose = verbose_eval
-        self.clf = xgb
-
-    def fit(self, X, y, X_test=None, y_test=None):
-
-        dtrain = xgb.DMatrix(X, label=y)
-        if X_test is not None:
-            dtest = xgb.DMatrix(X_test, label=y_test)
-            watchlist = [(dtrain, 'train'), (dtest, 'validation')]
-
-        else:
-            watchlist = [(dtrain, 'train')]
-
-        self.clf = xgb.train(params=self.params,
-                             dtrain=dtrain,
-                             num_boost_round=self.num_round,
-                             evals=watchlist,
-                             early_stopping_rounds=self.early_stopping_rounds,
-                             verbose_eval=self.verbose)
-        return self.clf
-
-    def predict_proba(self, X):
-        dtest = xgb.DMatrix(X)
-        preds = pd.DataFrame(self.clf.predict(dtest), index=X.index)
-        return preds
-
-
-class VWClassifier(BaseEstimator, ClassifierMixin):
-    """
-    Currently vowpalwabbit (the offical interface from VW github for python) doesnt support multiclass prediction.
-     Short term lets skip this
-    """
-
-    def __init__(self):
-        pass
-
-
 # Regressor Wrapper Class
-
 
 class KerasRegressor(BaseEstimator, RegressorMixin):
     """
@@ -376,63 +275,3 @@ class KerasRegressor(BaseEstimator, RegressorMixin):
             X = (X - self.mean) / self.std
 
         return [pred_[0] for pred_ in self.nn.predict(X, batch_size=batch_size, verbose=verbose)]
-
-
-class XGBRegressor(BaseEstimator, RegressorMixin):
-    """
-    (Example)
-    from base import XGBClassifier
-    class XGBModelV1(XGBClassifier):
-        def __init__(self,**params):
-            super(XGBModelV1, self).__init__(**params)
-
-    a = XGBModelV1(colsample_bytree=0.9,
-                   learning_rate=0.01,
-                   max_depth=5,
-                    min_child_weight=1,
-                    n_estimators=300,
-                    nthread=-1,
-                    objective='reg:linear',
-                    seed=0,
-                    silent=True,
-                    subsample=0.8)
-    a.fit(X_train, y_train, eval_metric='rmse',eval_set=[(X_train, y_train),(X_test, y_test)])
-
-    """
-
-    def __init__(self, params={}, num_round=50, eval_metric=None, early_stopping_rounds=None, verbose_eval=True):
-        self.params = params
-        self.num_round = num_round
-        self.early_stopping_rounds = early_stopping_rounds
-        self.eval_metric = eval_metric
-        self.verbose = verbose_eval
-        self.clf = xgb
-
-    def fit(self, X, y, X_test=None, y_test=None):
-
-        dtrain = xgb.DMatrix(X, label=y)
-
-        if X_test is not None:
-            dtest = xgb.DMatrix(X_test, label=y_test)
-            watchlist = [(dtrain, 'train'), (dtest, 'validation')]
-
-        else:
-            watchlist = [(dtrain, 'train')]
-
-        self.clf = xgb.train(params=self.params,
-                             dtrain=dtrain,
-                             num_boost_round=self.num_round,
-                             evals=watchlist,
-                             early_stopping_rounds=self.early_stopping_rounds,
-                             verbose_eval=self.verbose)
-        return self.clf
-
-    def predict(self, X):
-        dtest = xgb.DMatrix(X)
-
-        return pd.DataFeself.clf.predict(dtest)
-
-
-class VWRegressor(BaseEstimator, RegressorMixin):
-    def __init__(self):
-        pass

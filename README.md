@@ -1,6 +1,6 @@
 # Gestalt
 
-A helper library for data science pipeline
+A helper library for data science pipelines
 
 "_Something that is made of many parts and yet is somehow more than or different from the combination of its parts_"
 
@@ -13,10 +13,10 @@ expert to work on the most difficult aspects:
 3. Select appropriate features
 
 ## The goals of Gestalt
-The under pining technology of Gestalt is the fantastic python package DASK (http://dask.pydata.org) 
+The goal of Gestalt is to remove the cumbersome parts of building a data science pipeline.
 
-"`Dask is a flexible parallel computing library for analytic computing.`"
-
-### Programming by Optimization
-Following the paradigm of Programming by Optimization, we aim for a plug-able design to allow different algorithms (and
-indeed different software) to be instantiated automatically to provide teh best solution to the problem space.
+1. Load Data
+2. Select Algorithm
+3. Tune Algorithm 
+4. Dump models
+5. Predict against a test set.

@@ -4,10 +4,9 @@
 """
 CV output in Base needs to be fixed for blended test output
 """
-
-# General 
 import numpy as np
 import pandas as pd
+# General 
 
 # Problem Type 
 eval_type_list = ('logloss', 'auc', 'rmse')
