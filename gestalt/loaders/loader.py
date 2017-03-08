@@ -62,22 +62,12 @@ def load_libsvm(flist):
                 }
     """
     pass
-    # if (len(flist['train']) == 0) or (len(flist['target']) == 0) or (len(flist['test']) == 0):
-    #     raise Exception('Train, Target, and Test must be set at least one file, respectively.')
-    #
-    #
-    # print('Reading train dataset')
-    # X_train, y_train, X_test, y_test = load_svmlight_files(
-    #     ...("/path/to/train_dataset.txt", "/path/to/test_dataset.txt"))
-    #     print('train dataset is created')
-    #
-    # print('Reading train dataset')
-    # for i in flist['test']:
-    #     X_train, y_train, X_test, y_test = load_svmlight_files(
-    #         ...("/path/to/train_dataset.txt", "/path/to/test_dataset.txt"))
-    #
-    # assert (all(x_train.shape[1] == test.columns.shape[1]))
-    # print('Train and test cols align, lets get modelling')
+    # train_test_cv1_sparse = sparse.hstack((train_test, c_vect_sparse_1)).tocsr()
+    # something like this
+    # x_train = train_test_cv1_sparse[:ntrain, :]
+    # x_test = train_test_cv1_sparse[ntrain:, :]
+    # features += c_vect_sparse1_cols
+    # return x_train, y_train, test
     # return x_train, y_train, test
 
 
@@ -109,21 +99,9 @@ def load_libpd(flist):
     # if (len(flist['train']) == 0) or (len(flist['target']) == 0) or (len(flist['test']) == 0):
     #     raise Exception('Train, Target, and Test must be set at least one file, respectively.')
     #
-    # x_train = pd.DataFrame()
-    # test = pd.DataFrame()
-    #
-    # print('Reading train dataset')
-    # for i in flist['train']:
-    #     x_train = pd.concat([x_train, pd.read_csv(i, index_col=0)], axis=1)
-    #     print('train dataset is created')
-    #
-    # print('Reading target data')
-    # y_train = pd.read_csv(flist['target'][0], index_col=0)
-    #
-    # print('Reading train dataset')
-    # for i in flist['test']:
-    #     test = pd.concat([test, pd.read_csv(i, index_col=0)], axis=1)
-    #
-    # assert (all(x_train.columns == test.columns))
-    # print('Train and test cols align, lets get modelling')
+    # train_test_cv1_sparse = sparse.hstack((train_test, c_vect_sparse_1)).tocsr()
+    # something like this
+    # x_train = train_test_cv1_sparse[:ntrain, :]
+    # x_test = train_test_cv1_sparse[ntrain:, :]
+    # features += c_vect_sparse1_cols
     # return x_train, y_train, test

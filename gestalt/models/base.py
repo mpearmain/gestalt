@@ -107,8 +107,7 @@ class BaseModel(BaseEstimator):
                                                                 cls.eval_type))
 
         elif cls.problem_type == 'regression':
-            print('Setting Problem:{}, Eval:{}'.format(cls.problem_type,
-                                                       cls.eval_type))
+            print('Setting Problem:{}, Eval:{}'.format(cls.problem_type, cls.eval_type))
 
         return
 
