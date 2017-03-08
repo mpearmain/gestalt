@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 # Wrapper Class of Classifiers
-from base.base import BaseModel
+from models.base import BaseModel
 # BaseEstimator
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin, ClassifierMixin
@@ -17,7 +17,7 @@ class XGBClassifier(BaseEstimator, ClassifierMixin):
     XGBClassifier in xgboost for sklearn doesnt have ALL parameters accessible, a simple wrapper to expose them
 
     (Example)
-    from base import XGBClassifier
+    from models import XGBClassifier
     class XGBModelV1(XGBClassifier):
         def __init__(self,**params):
             super(XGBModelV1, self).__init__(**params)
@@ -71,7 +71,7 @@ class XGBClassifier(BaseEstimator, ClassifierMixin):
 class XGBRegressor(BaseEstimator, RegressorMixin):
     """
     (Example)
-    from base import XGBClassifier
+    from models import XGBClassifier
     class XGBModelV1(XGBClassifier):
         def __init__(self,**params):
             super(XGBModelV1, self).__init__(**params)

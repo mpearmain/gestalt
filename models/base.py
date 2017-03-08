@@ -6,11 +6,10 @@ CV output in Base needs to be fixed for blended test output
 """
 import numpy as np
 import pandas as pd
-# General
+# BaseEstimator
+from sklearn.base import BaseEstimator
 
-
-
-# PATH 
+# PATH
 # Change main folder name 
 FOLDER_NAME = ''
 DATA_PATH = 'input/'
@@ -22,18 +21,14 @@ FEATURES_PATH = 'output/features/'  # path of dataset created in feat_verXX.py
 # for saving the submitted format file(save_pred_as_submit_format())
 SUBMIT_FORMAT = 'input/sample_submission.csv'
 
-# BaseEstimator 
-from sklearn.base import BaseEstimator
-
-
 # evaluation function
 def eval_pred(y_true, y_pred, eval_type):
     loss = eval_type(y_true, y_pred)
     print("Loss Value: ", loss)
     return loss
 
-# BaseModel Class
 
+# BaseModel Class
 class BaseModel(BaseEstimator):
     """
     Parameters of fit
@@ -42,7 +37,7 @@ class BaseModel(BaseEstimator):
                     'test':('flist_test.csv'),}
 
     Example
-    from base.base import BaseModel,
+    from models.models import BaseModel,
     from wrappers.wrap_xgb  XGBClassifier
     FEATURE_LIST = ["feat.group1.blp"]
     PARAMS = {'n_estimator':700,
@@ -108,9 +103,9 @@ class BaseModel(BaseEstimator):
     @classmethod
     def set_prob_type(cls, problem_type, classification_type, eval_type):
         """ Set problem type """
-        assert problem_type in self.problem_type_list, 'Need to set Problem Type'
+        assert problem_type in problem_type_list, 'Need to set Problem Type'
         if problem_type == 'classification':
-            assert classification_type in self.classification_type_list, 'Need to set Classification Type'
+            assert classification_type in classification_type_list, 'Need to set Classification Type'
 
         cls.problem_type = problem_type
         cls.classification_type = classification_type

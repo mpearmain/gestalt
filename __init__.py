@@ -1,6 +1,6 @@
 # coding=utf-8
 import os
-from base.base import DATA_PATH, INPUT_PATH, OUTPUT_PATH, TEMP_PATH, FEATURES_PATH
+from models.base import DATA_PATH, INPUT_PATH, OUTPUT_PATH, TEMP_PATH, FEATURES_PATH
 
 # check if path exsits
 if not os.path.exists(DATA_PATH):

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 # Wrapper Class of Classifiers
-from base.base import BaseModel
+from models.base import BaseModel
 # BaseEstimator
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin, ClassifierMixin
@@ -29,7 +29,7 @@ class IntervalEvaluation(Callback):
 class KerasClassifier(BaseEstimator, ClassifierMixin):
     """
     (Example)
-    from base import KerasClassifier
+    from models import KerasClassifier
     class KerasModelV1(KerasClassifier):
 
         #Parameters for lerning
@@ -151,7 +151,7 @@ class KerasClassifier(BaseEstimator, ClassifierMixin):
 class KerasRegressor(BaseEstimator, RegressorMixin):
     """
     (Example)
-    from base import KerasClassifier
+    from models import KerasClassifier
     class KerasModelV1(KerasClassifier):
 
         #Parameters for lerning
