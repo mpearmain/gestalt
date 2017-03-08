@@ -6,12 +6,9 @@ CV output in Base needs to be fixed for blended test output
 """
 import numpy as np
 import pandas as pd
-# General 
+# General
 
-# Problem Type 
-eval_type_list = ('logloss', 'auc', 'rmse')
-problem_type_list = ('classification', 'regression')
-classification_type_list = ('binary', 'multi-class')
+
 
 # PATH 
 # Change main folder name 
@@ -28,32 +25,14 @@ SUBMIT_FORMAT = 'input/sample_submission.csv'
 # BaseEstimator 
 from sklearn.base import BaseEstimator
 
-# Evaluation 
-from sklearn.metrics import log_loss as ll
-from sklearn.metrics import roc_auc_score as AUC
-from sklearn.metrics import mean_squared_error
-
-
 
 # evaluation function
 def eval_pred(y_true, y_pred, eval_type):
-    if eval_type == 'logloss':
-        loss = ll(y_true, y_pred)
-        print("logloss: ", loss)
-        return loss
+    loss = eval_type(y_true, y_pred)
+    print("Loss Value: ", loss)
+    return loss
 
-    elif eval_type == 'auc':
-        loss = AUC(y_true, y_pred)
-        print("AUC: ", loss)
-        return loss
-
-    elif eval_type == 'rmse':
-        loss = np.sqrt(mean_squared_error(y_true, y_pred))
-        print("rmse: ", loss)
-        return loss
-
-
-# BaseModel Class 
+# BaseModel Class
 
 class BaseModel(BaseEstimator):
     """
@@ -63,7 +42,8 @@ class BaseModel(BaseEstimator):
                     'test':('flist_test.csv'),}
 
     Example
-    from base import BaseModel, XGBClassifier
+    from base.base import BaseModel,
+    from wrappers.wrap_xgb  XGBClassifier
     FEATURE_LIST = ["feat.group1.blp"]
     PARAMS = {'n_estimator':700,
               'sub_sample': 0.8,
@@ -79,21 +59,22 @@ class BaseModel(BaseEstimator):
         m = ModelV1(name="v1",
                     flist=FEATURE_LIST,
                     params=PARAMS,
+                    loader='load_pd'
+                    eval_type = logloss
                     kind='st')
         m.run(fold_strategy=skf)
     """
-
-    # Problem type(class variables)
     # Need to be set by BaseModel.set_prob_type()
-    problem_type = ''
-    classification_type = ''
-    eval_type = ''
+    problem_type = None
+    classification_type = None
+    eval_type = None
 
-    def __init__(self, name="", flist={}, params={}, kind='s'):
+    def __init__(self, name='', flist={}, params={}, loader='', kind=''):
         """
         :param name: Model name
         :param flist: Feature list
         :param params: Parameters
+        :param loader: The loader type to use
         :param kind: Kind of run()
         {'s': Stacking only. Saving an oof prediction({}_all_fold.csv)
               and average of test prediction based on fold-train models({}_test.csv).
@@ -103,33 +84,37 @@ class BaseModel(BaseEstimator):
          'cv': Only cross validation without saving the prediction
          }
         """
+
+        # Problem type(class variables)
+        self.problem_type_list = ('classification', 'regression')
+        self.classification_type_list = ('binary', 'multi-class')
+
         if BaseModel.problem_type == 'classification':
-            if not ((BaseModel.classification_type in classification_type_list) and
-                        (BaseModel.eval_type in eval_type_list)):
+            if not (BaseModel.classification_type in self.classification_type_list):
                 raise ValueError('Problem, Classification, and Evaluation types should be set before model defined')
         elif BaseModel.problem_type == 'regression':
-            if not BaseModel.eval_type in eval_type_list:
-                raise ValueError('Problem, Classification, and Evaluation types should be set before model defined')
+            if BaseModel.eval_type is None:
+                raise ValueError('Problem, and Evaluation types should be set before model defined')
         else:
             raise ValueError('Problem, Classification, and Evaluation types should be set before model defined')
 
         self.name = name
         self.flist = flist
         self.params = params
+        self.loader = loader
         self.kind = kind
         assert (self.kind in ['s', 't', 'st', 'cv'])
 
     @classmethod
     def set_prob_type(cls, problem_type, classification_type, eval_type):
         """ Set problem type """
-        assert problem_type in problem_type_list, 'Need to set Problem Type'
+        assert problem_type in self.problem_type_list, 'Need to set Problem Type'
         if problem_type == 'classification':
-            assert classification_type in classification_type_list, 'Need to set Classification Type'
-        assert eval_type in eval_type_list, 'Need to set Evaluation Type'
+            assert classification_type in self.classification_type_list, 'Need to set Classification Type'
 
         cls.problem_type = problem_type
         cls.classification_type = classification_type
-        cls.eval_type = eval_type
+        cls.eval_type = eval_type()
 
         if cls.problem_type == 'classification':
             print('Setting Problem:{}, Type:{}, Eval:{}'.format(cls.problem_type,
@@ -190,17 +175,17 @@ class BaseModel(BaseEstimator):
         clf = self.build_model()
         print("Creating train and test sets for stacking.")
 
-        # for binary 
+        # for binary
         if BaseModel.problem_type == 'regression' or BaseModel.classification_type == 'binary':
             dataset_blend_train = pd.DataFrame(np.nan, index=X.index, columns=self.name)
             dataset_blend_test = pd.DataFrame(np.nan, index=test.index, columns=self.name)
 
-        # for multi-class 
+        # for multi-class
         elif BaseModel.classification_type == 'multi-class':
             dataset_blend_train = pd.DataFrame(np.nan, index=X.index, columns=multi_cols)
             dataset_blend_test = pd.DataFrame(np.nan, index=test.index, columns=multi_cols)
 
-        # Start stacking 
+        # Start stacking
         evals = []
         for traincv, testcv in fold_strategy.split(X):
             # First create the different datasets to encode.
@@ -240,7 +225,7 @@ class BaseModel(BaseEstimator):
 
             evals.append(eval_pred(y_test, ypred, BaseModel.eval_type))
 
-            # binary classification 
+            # binary classification
             if BaseModel.problem_type == 'classification' and BaseModel.classification_type == 'binary':
                 # if using the mean of the prediction of each n_fold
                 if 'sklearn' in str(type(clf)):
@@ -248,13 +233,13 @@ class BaseModel(BaseEstimator):
                 else:
                     dataset_blend_test += clf.predict_proba(test)
 
-            # multi-class classification 
+            # multi-class classification
             elif BaseModel.problem_type == 'classification' and BaseModel.classification_type == 'multi-class':
                 # if using the mean of the prediction of each n_fold
                 dataset_blend_test += clf.predict_proba(test)
                 pass
 
-            # regression 
+            # regression
             elif BaseModel.problem_type == 'regression':
                 # if using the mean of the prediction of each n_fold
                 dataset_blend_test += clf.predict(test)
@@ -306,10 +291,3 @@ class BaseModel(BaseEstimator):
                 y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
 
         return
-
-    def load_data(self):
-        '''
-        flist
-        data
-        '''
-        return load_data(self.flist)
