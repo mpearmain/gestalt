@@ -14,29 +14,33 @@ class BaseModel(BaseEstimator):
     """
     Parameters of fit
     ----------
-    FEATURE_LIST = {'train':('flist_train.csv'),
-                    'test':('flist_test.csv'),}
+
+    problem_type = 'classification'
+    classification_type = 'multi-class'
+    eval_type = log_loss
+    BaseModel.set_prob_type(problem_type, classification_type, eval_type)
+
 
     Example
-    from models.models import BaseModel,
-    from wrappers.wrap_xgb  XGBClassifier
-    FEATURE_LIST = ["feat.group1.blp"]
-    PARAMS = {'n_estimator':700,
-              'sub_sample': 0.8,
-              'seed': 71
-             }
+    -------
+    from models.base import BaseModel,
+    from loaders.loader import load_pd
+    from wrappers.wrap_xgb  import XGBClassifier
+    FEATURE_LIST = {'train':('train.csv'),
+                    'target': 'target.csv'
+                    'test':('test.csv'),}
+    PARAMS = {'n_estimator':700,'sub_sample': 0.8,'seed': 71}
+
     class ModelV1(BaseModel):
          def build_model(self):
          return XGBClassifier(**self.params)
 
-
     if __name__ == "__main__":
         skf = Kfold(folds=10, shuffle=True, random_state=42)
-        m = ModelV1(name="v1",
+        m = ModelV1(name="level0_xgb",
                     flist=FEATURE_LIST,
                     params=PARAMS,
-                    loader='load_pd'
-                    eval_type = logloss
+                    loader=load_pd
                     kind='st')
         m.run(fold_strategy=skf)
     """
