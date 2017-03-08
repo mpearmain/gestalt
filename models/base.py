@@ -49,20 +49,23 @@ class BaseModel(BaseEstimator):
     classification_type = None
     eval_type = None
 
-    def __init__(self, name='', flist={}, params={}, loader='', kind=''):
+    def __init__(self, name='', flist={}, params={}, loader='', type=''):
         """
         :param name: Model name
         :param flist: Feature list
         :param params: Parameters
         :param loader: The loader type to use
-        :param kind: Kind of run()
-        {'s': Stacking only. Saving an oof prediction({}_all_fold.csv)
-              and average of test prediction based on fold-train models({}_test.csv).
-         't': Training all data and predict test({}_test_FullTrainingData.csv).
-         'st': Stacking and then training all data and predict test
-               Using save final model with cross-validation
-         'cv': Only cross validation without saving the prediction
-         }
+        :param type: Kind of run()
+        's': Stacking only. Saving an oof prediction({}_all_fold.csv) and average of test prediction based on
+             fold-train models({}_test.csv).
+             -- Useful for quasi-bagging of results and important if feature transforms have been performed at a
+                fold level (e.g bayesian encoding at a fold level)
+        't': Training all data and predict test({}_test_FullTrainingData.csv).
+             -- Least powerful, it essentially runs fit and then predicts, no CV available but faster than 'st'
+        'st': Stacking and then training all data and predict test using save final model with cross-validation
+              -- Use this for train / test splits of data (probably time series)
+        'cv': Only cross validation without saving the prediction
+              -- Use this for the final level ensembler to get a feel for the loss.
         """
 
         # Problem type(class variables)
@@ -82,7 +85,7 @@ class BaseModel(BaseEstimator):
         self.flist = flist
         self.params = params
         self.loader = loader
-        self.kind = kind
+        self.kind = type
         assert (self.kind in ['s', 't', 'st', 'cv'])
 
     @classmethod
