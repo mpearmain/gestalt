@@ -9,6 +9,7 @@ import pandas as pd
 # BaseEstimator
 from sklearn.base import BaseEstimator
 
+
 # BaseModel Class
 class BaseModel(BaseEstimator):
     """
@@ -49,7 +50,7 @@ class BaseModel(BaseEstimator):
     classification_type = None
     eval_type = None
 
-    def __init__(self, name='', flist={}, params={}, loader='', type=''):
+    def __init__(self, name='', flist={}, params={}, loader=None, type=None):
         """
         :param name: Model name
         :param flist: Feature list
@@ -59,7 +60,7 @@ class BaseModel(BaseEstimator):
         's': Stacking only. Saving an oof prediction({}_all_fold.csv) and average of test prediction based on
              fold-train models({}_test.csv).
              -- Useful for quasi-bagging of results and important if feature transforms have been performed at a
-                fold level (e.g bayesian encoding at a fold level)
+                fold level (e.g bayesian encoding in transformers)
         't': Training all data and predict test({}_test_FullTrainingData.csv).
              -- Least powerful, it essentially runs fit and then predicts, no CV available but faster than 'st'
         'st': Stacking and then training all data and predict test using save final model with cross-validation
@@ -68,13 +69,11 @@ class BaseModel(BaseEstimator):
               -- Use this for the final level ensembler to get a feel for the loss.
         """
 
-        # Problem type(class variables)
-        self.problem_type_list = ('classification', 'regression')
-        self.classification_type_list = ('binary', 'multi-class')
-
         if BaseModel.problem_type == 'classification':
-            if not (BaseModel.classification_type in self.classification_type_list):
+            if not (BaseModel.classification_type in ('binary', 'multi-class')):
                 raise ValueError('Problem, Classification, and Evaluation types should be set before model defined')
+            if BaseModel.eval_type is None:
+                raise ValueError('Problem, and Evaluation types should be set before model defined')
         elif BaseModel.problem_type == 'regression':
             if BaseModel.eval_type is None:
                 raise ValueError('Problem, and Evaluation types should be set before model defined')
@@ -84,17 +83,20 @@ class BaseModel(BaseEstimator):
         self.name = name
         self.flist = flist
         self.params = params
-        self.loader = loader
+        self.loader = loader()
         self.kind = type
         assert (self.kind in ['s', 't', 'st', 'cv'])
 
     @classmethod
     def set_prob_type(cls, problem_type, classification_type, eval_type):
-        """ Set problem type """
-        assert problem_type in problem_type_list, 'Need to set Problem Type'
-        if problem_type == 'classification':
-            assert classification_type in classification_type_list, 'Need to set Classification Type'
+        '''
 
+        :param problem_type: 'classification' or 'regression'
+        :param classification_type: 'binary' or 'multi-class'
+        :param eval_type:
+        :return:
+        '''
+        """ Set problem type """
         cls.problem_type = problem_type
         cls.classification_type = classification_type
         cls.eval_type = eval_type()
@@ -143,8 +145,8 @@ class BaseModel(BaseEstimator):
         """
         print('running model: {}'.format(self.name))
         # Remember X and y are pandas DataFrames!
-        X, y, test = self.load_data()
-        num_class = y.ix[:,0].nunique() # only for multi-class classification
+        X, y, test = self.loader()
+        num_class = y.ix[:, 0].nunique()  # only for multi-class classification
 
         if BaseModel.classification_type == 'multi-class':
             multi_cols = self.make_multi_cols(num_class, '{}_pred'.format(self.name))
@@ -158,7 +160,7 @@ class BaseModel(BaseEstimator):
                 y_submission = clf.predict_proba(test)
 
                 if BaseModel.classification_type == 'binary':
-                    y_submission.to_csv(TEMP_PATH +'{}_test_FullTrainingData.csv'.format(self.name))
+                    y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
 
                 elif BaseModel.classification_type == 'multi-class':
                     y_submission.columns = multi_cols
@@ -263,7 +265,7 @@ class BaseModel(BaseEstimator):
             # Stacking(cross-validation)
             clf = self.build_model()
             if 'sklearn' in str(type(clf)):
-                y = y.ix[:,0]
+                y = y.ix[:, 0]
             clf.fit(X, y)
             if BaseModel.problem_type == 'classification':
                 if BaseModel.classification_type == 'binary':
