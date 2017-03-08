@@ -21,4 +21,11 @@ The goal of Gestalt is to remove the cumbersome parts of building a data science
 4. Dump models
 5. Predict against a test set.
 
+## Install 
+```python
+
+pip install -U git+https://github.com/mpearmain/gestalt
+```
+
 ## Example 
+In the examples dir there is a set of notebooks showing various different use cases.
