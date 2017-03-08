@@ -9,25 +9,6 @@ import pandas as pd
 # BaseEstimator
 from sklearn.base import BaseEstimator
 
-# PATH
-# Change main folder name 
-FOLDER_NAME = ''
-DATA_PATH = 'input/'
-INPUT_PATH = 'input/'  # path of original data and fold_index
-OUTPUT_PATH = 'output/'
-TEMP_PATH = 'output/temp/'  # path of saving each stacking prediction
-FEATURES_PATH = 'output/features/'  # path of dataset created in feat_verXX.py
-
-# for saving the submitted format file(save_pred_as_submit_format())
-SUBMIT_FORMAT = 'input/sample_submission.csv'
-
-# evaluation function
-def eval_pred(y_true, y_pred, eval_type):
-    loss = eval_type(y_true, y_pred)
-    print("Loss Value: ", loss)
-    return loss
-
-
 # BaseModel Class
 class BaseModel(BaseEstimator):
     """
@@ -134,6 +115,20 @@ class BaseModel(BaseEstimator):
             Named cols for multi-class predictions"""
         cols = ['class' + str(i) + '_' + name for i in range(num_class)]
         return cols
+
+    @staticmethod
+    def eval_pred(y_true, y_pred, eval_type):
+        '''
+
+        :param y_true : array-like or label indicator matrix Ground truth (correct) labels for n_samples samples.
+        :param y_pred : array-like of float, shape = (n_samples, n_classes) or (n_samples,)
+                        Predicted probabilities, as returned by a classifier's predict_proba method.
+        :param eval_type: The evaluation function to apply to the arrays.
+        :return: Scalar : A loss value driven by the eval_type.
+        '''
+        loss = eval_type(y_true, y_pred)
+        print("Loss Value: ", loss)
+        return loss
 
     def run(self, fold_strategy):
         """
