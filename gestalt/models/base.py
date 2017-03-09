@@ -83,32 +83,23 @@ class BaseModel(BaseEstimator):
         self.name = name
         self.flist = flist
         self.params = params
-        self.loader = loader()
+        self.loader = loader
         self.kind = type
         assert (self.kind in ['s', 't', 'st', 'cv'])
 
     @classmethod
     def set_prob_type(cls, problem_type, classification_type, eval_type):
-        '''
+        """
 
         :param problem_type: 'classification' or 'regression'
         :param classification_type: 'binary' or 'multi-class'
         :param eval_type:
         :return:
-        '''
-        """ Set problem type """
+        """
+
         cls.problem_type = problem_type
         cls.classification_type = classification_type
-        cls.eval_type = eval_type()
-
-        if cls.problem_type == 'classification':
-            print('Setting Problem:{}, Type:{}, Eval:{}'.format(cls.problem_type,
-                                                                cls.classification_type,
-                                                                cls.eval_type))
-
-        elif cls.problem_type == 'regression':
-            print('Setting Problem:{}, Eval:{}'.format(cls.problem_type, cls.eval_type))
-
+        cls.eval_type = eval_type
         return
 
     def build_model(self):
@@ -124,17 +115,16 @@ class BaseModel(BaseEstimator):
         cols = ['class' + str(i) + '_' + name for i in range(num_class)]
         return cols
 
-    @staticmethod
-    def eval_pred(y_true, y_pred, eval_type):
-        '''
-
+    @classmethod
+    def eval_pred(cls, y_true, y_pred):
+        """
         :param y_true : array-like or label indicator matrix Ground truth (correct) labels for n_samples samples.
         :param y_pred : array-like of float, shape = (n_samples, n_classes) or (n_samples,)
                         Predicted probabilities, as returned by a classifier's predict_proba method.
         :param eval_type: The evaluation function to apply to the arrays.
         :return: Scalar : A loss value driven by the eval_type.
-        '''
-        loss = eval_type(y_true, y_pred)
+        """
+        loss = cls.eval_type(y_true, y_pred)
         print("Loss Value: ", loss)
         return loss
 
