@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 # Wrapper Class of Classifiers
-from gestalt.models.base import BaseModel
+from gestalt.models.gestalt import Gestalt
 # BaseEstimator
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin, ClassifierMixin
@@ -137,10 +137,10 @@ class KerasClassifier(BaseEstimator, ClassifierMixin):
         if self.normalize:
             X = (X - self.mean) / self.std
 
-        if BaseModel.classification_type == 'binary':
+        if Gestalt.classification_type == 'binary':
             preds = pd.DataFrame(self.nn.predict_proba(X, batch_size=batch_size, verbose=verbose),
                                  index=idx)[:, 1]
-        elif BaseModel.classification_type == 'multi-class':
+        elif Gestalt.classification_type == 'multi-class':
             preds = pd.DataFrame(self.nn.predict_proba(X, batch_size=batch_size, verbose=verbose),
                                  index=idx)
             return preds

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 # Wrapper Class of Classifiers
-from gestalt.models.base import BaseModel
+from gestalt.models.gestalt import Gestalt
 # BaseEstimator
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin, ClassifierMixin

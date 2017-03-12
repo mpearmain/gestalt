@@ -11,7 +11,7 @@ from sklearn.base import BaseEstimator
 
 
 # BaseModel Class
-class BaseModel(BaseEstimator):
+class Gestalt(BaseEstimator):
     """
     Parameters of fit
     ----------
@@ -69,13 +69,13 @@ class BaseModel(BaseEstimator):
               -- Use this for the final level ensembler to get a feel for the loss.
         """
 
-        if BaseModel.problem_type == 'classification':
-            if not (BaseModel.classification_type in ('binary', 'multi-class')):
+        if Gestalt.problem_type == 'classification':
+            if not (Gestalt.classification_type in ('binary', 'multi-class')):
                 raise ValueError('Problem, Classification, and Evaluation types should be set before model defined')
-            if BaseModel.eval_type is None:
+            if Gestalt.eval_type is None:
                 raise ValueError('Problem, and Evaluation types should be set before model defined')
-        elif BaseModel.problem_type == 'regression':
-            if BaseModel.eval_type is None:
+        elif Gestalt.problem_type == 'regression':
+            if Gestalt.eval_type is None:
                 raise ValueError('Problem, and Evaluation types should be set before model defined')
         else:
             raise ValueError('Problem, Classification, and Evaluation types should be set before model defined')
@@ -134,10 +134,10 @@ class BaseModel(BaseEstimator):
         """
         print('running model: {}'.format(self.name))
         # Remember X and y are pandas DataFrames!
-        X, y, test = self.loader()
+        X, y, test = self.loader(self.flist)
         num_class = y.ix[:, 0].nunique()  # only for multi-class classification
 
-        if BaseModel.classification_type == 'multi-class':
+        if Gestalt.classification_type == 'multi-class':
             multi_cols = self.make_multi_cols(num_class, '{}_pred'.format(self.name))
 
         if self.kind == 't':
@@ -145,17 +145,17 @@ class BaseModel(BaseEstimator):
             if 'sklearn' in str(type(clf)):
                 y = y.ix[:, 0]
             clf.fit(X, y)
-            if BaseModel.problem_type == 'classification':
+            if Gestalt.problem_type == 'classification':
                 y_submission = clf.predict_proba(test)
 
-                if BaseModel.classification_type == 'binary':
+                if Gestalt.classification_type == 'binary':
                     y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
 
-                elif BaseModel.classification_type == 'multi-class':
+                elif Gestalt.classification_type == 'multi-class':
                     y_submission.columns = multi_cols
                     y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
 
-            elif BaseModel.problem_type == 'regression':
+            elif Gestalt.problem_type == 'regression':
                 y_submission = clf.predict(test)
                 y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
             return
@@ -164,12 +164,12 @@ class BaseModel(BaseEstimator):
         print("Creating train and test sets for stacking.")
 
         # for binary
-        if BaseModel.problem_type == 'regression' or BaseModel.classification_type == 'binary':
+        if Gestalt.problem_type == 'regression' or Gestalt.classification_type == 'binary':
             dataset_blend_train = pd.DataFrame(np.nan, index=X.index, columns=self.name)
             dataset_blend_test = pd.DataFrame(np.nan, index=test.index, columns=self.name)
 
         # for multi-class
-        elif BaseModel.classification_type == 'multi-class':
+        elif Gestalt.classification_type == 'multi-class':
             dataset_blend_train = pd.DataFrame(np.nan, index=X.index, columns=multi_cols)
             dataset_blend_test = pd.DataFrame(np.nan, index=test.index, columns=multi_cols)
 
@@ -189,20 +189,20 @@ class BaseModel(BaseEstimator):
             else:
                 clf.fit(X_train, y_train, X_test, y_test)
 
-            if BaseModel.problem_type == 'classification' and BaseModel.classification_type == 'binary':
+            if Gestalt.problem_type == 'classification' and Gestalt.classification_type == 'binary':
                 # if using the mean of the prediction of each fold print str(type(clf))
                 if 'sklearn' in str(type(clf)):
                     ypred = clf.predict_proba(X_test)[:, 1]
                 else:
                     ypred = clf.predict_proba(X_test)
 
-            elif BaseModel.problem_type == 'classification' and BaseModel.classification_type == 'multi-class':
+            elif Gestalt.problem_type == 'classification' and Gestalt.classification_type == 'multi-class':
                 if 'sklearn' in str(type(clf)):
                     ypred = pd.DataFrame(clf.predict_proba(X_test), columns=multi_cols)
                 else:
                     ypred = clf.predict_proba(X_test)
 
-            elif BaseModel.problem_type == 'regression':
+            elif Gestalt.problem_type == 'regression':
                 ypred = clf.predict(X_test)
 
             try:
@@ -211,10 +211,10 @@ class BaseModel(BaseEstimator):
             except:
                 break
 
-            evals.append(eval_pred(y_test, ypred, BaseModel.eval_type))
+            evals.append(eval_pred(y_test, ypred, Gestalt.eval_type))
 
             # binary classification
-            if BaseModel.problem_type == 'classification' and BaseModel.classification_type == 'binary':
+            if Gestalt.problem_type == 'classification' and Gestalt.classification_type == 'binary':
                 # if using the mean of the prediction of each n_fold
                 if 'sklearn' in str(type(clf)):
                     dataset_blend_test += clf.predict_proba(test)[:, 1]
@@ -222,13 +222,13 @@ class BaseModel(BaseEstimator):
                     dataset_blend_test += clf.predict_proba(test)
 
             # multi-class classification
-            elif BaseModel.problem_type == 'classification' and BaseModel.classification_type == 'multi-class':
+            elif Gestalt.problem_type == 'classification' and Gestalt.classification_type == 'multi-class':
                 # if using the mean of the prediction of each n_fold
                 dataset_blend_test += clf.predict_proba(test)
                 pass
 
             # regression
-            elif BaseModel.problem_type == 'regression':
+            elif Gestalt.problem_type == 'regression':
                 # if using the mean of the prediction of each n_fold
                 dataset_blend_test += clf.predict(test)
 
@@ -236,17 +236,17 @@ class BaseModel(BaseEstimator):
 
         for i in range(fold_strategy.n_splits):
             print('Fold{}: {}'.format(i + 1, evals[i]))
-        print('{} CV Mean: '.format(BaseModel.eval_type), np.mean(evals), ' Std: ', np.std(evals))
+        print('{} CV Mean: '.format(Gestalt.eval_type), np.mean(evals), ' Std: ', np.std(evals))
 
         # Saving
         if self.kind != 'cv':
             print('Saving results')
-            if (BaseModel.problem_type == 'classification' and
-                        BaseModel.classification_type == 'binary') or (BaseModel.problem_type == 'regression'):
+            if (Gestalt.problem_type == 'classification' and
+                        Gestalt.classification_type == 'binary') or (Gestalt.problem_type == 'regression'):
                 dataset_blend_train.to_csv(TEMP_PATH + '{}_all_fold.csv'.format(self.name))
                 dataset_blend_test.to_csv(TEMP_PATH + '{}_test.csv'.format(self.name))
 
-            elif BaseModel.problem_type == 'classification' and BaseModel.classification_type == 'multi-class':
+            elif Gestalt.problem_type == 'classification' and Gestalt.classification_type == 'multi-class':
                 dataset_blend_train.to_csv(TEMP_PATH + '{}_all_fold.csv'.format(self.name))
                 dataset_blend_test.to_csv(TEMP_PATH + '{}_test.csv'.format(self.name))
 
@@ -256,15 +256,15 @@ class BaseModel(BaseEstimator):
             if 'sklearn' in str(type(clf)):
                 y = y.ix[:, 0]
             clf.fit(X, y)
-            if BaseModel.problem_type == 'classification':
-                if BaseModel.classification_type == 'binary':
+            if Gestalt.problem_type == 'classification':
+                if Gestalt.classification_type == 'binary':
                     if 'sklearn' in str(type(clf)):
                         y_submission = clf.predict_proba(test)[:, 1]
                     else:
                         y_submission = clf.predict_proba(test)
                     y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
 
-                elif BaseModel.classification_type == 'multi-class':
+                elif Gestalt.classification_type == 'multi-class':
                     if 'sklearn' in str(type(clf)):
                         y_submission = pd.DataFrame(clf.predict_proba(test), index=test.index, columns=multi_cols)
                     else:
@@ -274,7 +274,7 @@ class BaseModel(BaseEstimator):
 
                     y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
 
-            elif BaseModel.problem_type == 'regression':
+            elif Gestalt.problem_type == 'regression':
                 y_submission = clf.predict(test)
                 y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
 
