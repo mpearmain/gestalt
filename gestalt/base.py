@@ -24,12 +24,8 @@ class Gestalt(BaseEstimator):
 
     Example
     -------
-    from models.base import BaseModel,
-    from loaders.loader import load_pd
-    from wrappers.wrap_xgb  import XGBClassifier
-    FEATURE_LIST = {'train':('train.csv'),
-                    'target': 'target.csv'
-                    'test':('test.csv'),}
+    from stackers.base import BaseModel,
+    from estimator_wrappers.wrap_xgb  import XGBClassifier
     PARAMS = {'n_estimator':700,'sub_sample': 0.8,'seed': 71}
 
     class ModelV1(BaseModel):
@@ -39,9 +35,7 @@ class Gestalt(BaseEstimator):
     if __name__ == "__main__":
         skf = Kfold(folds=10, shuffle=True, random_state=42)
         m = ModelV1(name="level0_xgb",
-                    flist=FEATURE_LIST,
                     params=PARAMS,
-                    loader=load_pd
                     kind='st')
         m.run(fold_strategy=skf)
     """
@@ -50,7 +44,7 @@ class Gestalt(BaseEstimator):
     classification_type = None
     eval_type = None
 
-    def __init__(self, name='', flist={}, params={}, loader=None, type=None):
+    def __init__(self, X, y, test, name='', params={}, loader=None, type=None):
         """
         :param name: Model name
         :param flist: Feature list
@@ -58,7 +52,7 @@ class Gestalt(BaseEstimator):
         :param loader: The loader type to use
         :param type: Kind of run()
         's': Stacking only. Saving an oof prediction({}_all_fold.csv) and average of test prediction based on
-             fold-train models({}_test.csv).
+             fold-train stackers({}_test.csv).
              -- Useful for quasi-bagging of results and important if feature transforms have been performed at a
                 fold level (e.g bayesian encoding in transformers)
         't': Training all data and predict test({}_test_FullTrainingData.csv).
@@ -81,7 +75,9 @@ class Gestalt(BaseEstimator):
             raise ValueError('Problem, Classification, and Evaluation types should be set before model defined')
 
         self.name = name
-        self.flist = flist
+        self.X = X,
+        self.y = y,
+        self.test = test,
         self.params = params
         self.loader = loader
         self.kind = type
@@ -133,11 +129,10 @@ class Gestalt(BaseEstimator):
         :param fold_strategy: A folds generator object from sklearn.model_selection. (sklearn v0.18)
         """
         print('running model: {}'.format(self.name))
-        # Remember X and y are pandas DataFrames!
-        X, y, test = self.loader(self.flist)
-        num_class = y.ix[:, 0].nunique()  # only for multi-class classification
+        X, y, test = self.X, self.y, self.test
 
         if Gestalt.classification_type == 'multi-class':
+            num_class = y.ix[:, 0].nunique()  # only for multi-class classification
             multi_cols = self.make_multi_cols(num_class, '{}_pred'.format(self.name))
 
         if self.kind == 't':
@@ -149,21 +144,21 @@ class Gestalt(BaseEstimator):
                 y_submission = clf.predict_proba(test)
 
                 if Gestalt.classification_type == 'binary':
-                    y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
+                    y_submission.to_csv(PATH + '{}_test_FullTrainingData.csv'.format(self.name))
 
                 elif Gestalt.classification_type == 'multi-class':
                     y_submission.columns = multi_cols
-                    y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
+                    y_submission.to_csv(PATH + '{}_test_FullTrainingData.csv'.format(self.name))
 
             elif Gestalt.problem_type == 'regression':
                 y_submission = clf.predict(test)
-                y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
+                y_submission.to_csv(PATH + '{}_test_FullTrainingData.csv'.format(self.name))
             return
 
         clf = self.build_model()
         print("Creating train and test sets for stacking.")
 
-        # for binary
+        # for binary and regression.
         if Gestalt.problem_type == 'regression' or Gestalt.classification_type == 'binary':
             dataset_blend_train = pd.DataFrame(np.nan, index=X.index, columns=self.name)
             dataset_blend_test = pd.DataFrame(np.nan, index=test.index, columns=self.name)
@@ -243,12 +238,12 @@ class Gestalt(BaseEstimator):
             print('Saving results')
             if (Gestalt.problem_type == 'classification' and
                         Gestalt.classification_type == 'binary') or (Gestalt.problem_type == 'regression'):
-                dataset_blend_train.to_csv(TEMP_PATH + '{}_all_fold.csv'.format(self.name))
-                dataset_blend_test.to_csv(TEMP_PATH + '{}_test.csv'.format(self.name))
+                dataset_blend_train.to_csv(PATH + '{}_all_fold.csv'.format(self.name))
+                dataset_blend_test.to_csv(PATH + '{}_test.csv'.format(self.name))
 
             elif Gestalt.problem_type == 'classification' and Gestalt.classification_type == 'multi-class':
-                dataset_blend_train.to_csv(TEMP_PATH + '{}_all_fold.csv'.format(self.name))
-                dataset_blend_test.to_csv(TEMP_PATH + '{}_test.csv'.format(self.name))
+                dataset_blend_train.to_csv(PATH + '{}_all_fold.csv'.format(self.name))
+                dataset_blend_test.to_csv(PATH + '{}_test.csv'.format(self.name))
 
         if self.kind == 'st':
             # Stacking(cross-validation)
@@ -262,7 +257,7 @@ class Gestalt(BaseEstimator):
                         y_submission = clf.predict_proba(test)[:, 1]
                     else:
                         y_submission = clf.predict_proba(test)
-                    y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
+                    y_submission.to_csv(PATH + '{}_test_FullTrainingData.csv'.format(self.name))
 
                 elif Gestalt.classification_type == 'multi-class':
                     if 'sklearn' in str(type(clf)):
@@ -272,10 +267,10 @@ class Gestalt(BaseEstimator):
                         y_submission = test.index
                         y_submission.columns = multi_cols
 
-                    y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
+                    y_submission.to_csv(PATH + '{}_test_FullTrainingData.csv'.format(self.name))
 
             elif Gestalt.problem_type == 'regression':
                 y_submission = clf.predict(test)
-                y_submission.to_csv(TEMP_PATH + '{}_test_FullTrainingData.csv'.format(self.name))
+                y_submission.to_csv(PATH + '{}_test_FullTrainingData.csv'.format(self.name))
 
         return

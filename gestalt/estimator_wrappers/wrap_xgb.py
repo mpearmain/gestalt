@@ -1,12 +1,8 @@
-import numpy as np
 import pandas as pd
-# Wrapper Class of Classifiers
-from gestalt.models.gestalt import Gestalt
-# BaseEstimator
+import xgboost as xgb
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin, ClassifierMixin
 
-import xgboost as xgb
 
 # Although the python version of xgboost does come with a sklearn interface it doesnt contain ALL the params we may want
 # to use, these wrapper by pass that need.
@@ -17,7 +13,7 @@ class XGBClassifier(BaseEstimator, ClassifierMixin):
     XGBClassifier in xgboost for sklearn doesnt have ALL parameters accessible, a simple wrapper to expose them
 
     (Example)
-    from models import XGBClassifier
+    from stackers import XGBClassifier
     class XGBModelV1(XGBClassifier):
         def __init__(self,**params):
             super(XGBModelV1, self).__init__(**params)
@@ -71,7 +67,7 @@ class XGBClassifier(BaseEstimator, ClassifierMixin):
 class XGBRegressor(BaseEstimator, RegressorMixin):
     """
     (Example)
-    from models import XGBClassifier
+    from stackers import XGBClassifier
     class XGBModelV1(XGBClassifier):
         def __init__(self,**params):
             super(XGBModelV1, self).__init__(**params)
