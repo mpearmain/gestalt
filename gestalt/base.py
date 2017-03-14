@@ -125,11 +125,6 @@ class Gestalt(BaseEstimator):
         return loss
 
     def run(self, fold_strategy):
-        """
-        :param fold_strategy: A folds generator object from sklearn.model_selection. (sklearn v0.18)
-        """
-        print('running model: {}'.format(self.name))
-        X, y, test = self.X, self.y, self.test
 
         if Gestalt.classification_type == 'multi-class':
             num_class = y.ix[:, 0].nunique()  # only for multi-class classification

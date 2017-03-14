@@ -60,19 +60,26 @@ class Generalised_Stacking():
         '''
 
         if isinstance(X, pd.DataFrame):
-            self.stacking = pd_stack.Generalised_Stacking(self, self.base_estimators, self.folds_strategy,
-                                                          self.estimator_type, self.stack_type, self.feval)
+            # y is a dataframe object with one col.
+            if isinstance(y, pd.DataFrame) & y.shape[1] is 1:
+                self.stacking = pd_stack.Generalised_Stacking(self, self.base_estimators, self.folds_strategy,
+                                                              self.estimator_type, self.stack_type, self.feval)
         if isinstance(X, sparse.csr_matrix):
-            self.stacking = csr_stack.Generalised_Stacking(self, self.base_estimators, self.folds_strategy,
-                                                           self.estimator_type, self.stack_type, self.feval)
+            if isinstance(y, np.array):
+                self.stacking = csr_stack.Generalised_Stacking(self, self.base_estimators, self.folds_strategy,
+                                                               self.estimator_type, self.stack_type, self.feval)
         self.stacking.fit(X, y)
 
     def predict(self, X):
+        if self.estimator_type is not 'regression':
+            raise ValueError("Predit can only be called on regression estimator_type problems")
         if self.stacking is None:
             raise ValueError("Fit must have been called before you can use `predict`")
-        return self.stacking.predict
+        return self.stacking.predict(X)
 
     def predict_proba(self, X):
+        if self.estimator_type is not 'classificatrion':
+            raise ValueError("predit_proba can only be called on classification estimator_type problems")
         if self.stacking is None:
             raise ValueError("Fit must have been called before you can use `predict_proba`")
         return self.stacking.predict_proba(X)
