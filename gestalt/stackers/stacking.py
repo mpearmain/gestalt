@@ -9,7 +9,7 @@ import gestalt.stackers.pandas_stacking as pd_stack
 #import gestalt.stackers.scipy_csr_stacking as csr_stack
 
 
-class Generalised_Stacking():
+class GeneralisedStacking:
     """
     A general driver for a stacking framework, the simple idea is a common interface for running stackers in python
     based on the same set of folds created from an sklearn.model_selection type (say Kfold)
