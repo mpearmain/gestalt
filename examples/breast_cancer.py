@@ -28,8 +28,7 @@ from sklearn.metrics import log_loss
 
 skf = KFold(n_splits=10, random_state=42, shuffle=True)
 
-b_classifiers = [RandomForestClassifier(),
-                 XGBClassifier()]
+b_classifiers = [RandomForestClassifier()]
 
 b_cancer =
 

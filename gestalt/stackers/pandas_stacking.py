@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-class Generalised_Stacking():
+class GeneralisedStacking:
     """
     A generalised stacking class specifically designed for use with dense pandas DataFrames.
     """
@@ -12,9 +12,6 @@ class Generalised_Stacking():
         self.estimator_type = estimator_type
         self.stack_type = stack_type
         self.feval = feval
-
-        # Build an empty pandas dataframe to store the meta results to.
-        # As many rows as the folds data, as many cols as base regressors
         self.stacking_train = None
         self.base_fit = []
 
@@ -71,9 +68,11 @@ class Generalised_Stacking():
                 i += 1
                 print('CV Mean: ', np.mean(evals), ' Std: ', np.std(evals))
 
-
     def _fit_st(self, X, y, model_no):
+        # Fit a model that stacks for CV folds, predicts the out-of-fold rows for the X and then runs a full fit on
+        # the data to use for preditions.
         evals = []
+        i=0
         self.stacking_train = pd.DataFrame(np.nan, index=X.index, columns=self.colnames)
         for traincv, testcv in self.folds_strategy:
             # Loop over the different folds.
@@ -86,10 +85,14 @@ class Generalised_Stacking():
             self.base_estimators[model_no].fit(X_train, y_train)
             predicted_y = self.base_estimators[model_no].predict(X_test)
             if self.feval is not None:
-                print("Current Score = ", self.feval(y_test, predicted_y))
-            self.stacking_train.ix[testcv, model_no] = predicted_y
+                fold_score = self.feval(y_test, predicted_y)
+                evals.append(fold_score)
+                print('Fold{}: {}'.format(i + 1, evals[i]))
+                print('CV Mean: ', np.mean(evals), ' Std: ', np.std(evals))
+                self.stacking_train.ix[testcv, model_no] = predicted_y
+                i += 1
         # Finally fit against all the data
-        self.base_estimators[model_no].fit(X, y)
+        self._fit_t(X, y, model_no)
 
     def _fit_s(self, X, y):
 
