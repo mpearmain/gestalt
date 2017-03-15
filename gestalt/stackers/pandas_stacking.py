@@ -1,5 +1,6 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 
 class Generalised_Stacking():
     """
@@ -32,17 +33,18 @@ class Generalised_Stacking():
                 self._fit_t(X, y, model_no)
             elif self.stack_type is 'cv':
                 print("Fitting type cv stack.")
-                self._fit_cv(X,y,model_no)
+                self._fit_cv(X, y, model_no)
             elif self.stack_type is 'st':
                 print("Fitting type st stack.")
-                self._fit_st(X,y,model_no)
+                self._fit_st(X, y, model_no)
             elif self.stack_type is 's':
                 print("Fitting type s stack.")
-                self._fit_s(X,y,model_no)
+                self._fit_s(X, y, model_no)
         return
 
     def _fit_t(self, X, y, model_no):
         # We only run against the full dataset i.e no 'cv' information is available.
+        y = y[0].values
         self.base_estimators[model_no].fit(X, y)
         return
 
@@ -50,13 +52,13 @@ class Generalised_Stacking():
         # We only look at cv across folds - no storing of models or results with 'cv'
         evals = []
         i = 0
-        for traincv, testcv in self.folds_strategy:
+        for traincv, testcv in self.folds_strategy.split(X, y):
             # Loop over the different folds.
             # First create the different datasets to encode.
             X_train = X.iloc[traincv]
             X_test = X.iloc[testcv]
-            y_train = y.iloc[traincv]
-            y_test = y.iloc[testcv]
+            y_train = y.iloc[traincv][0].values
+            y_test = y.iloc[testcv][0].values
 
             self.base_estimators[model_no].fit(X_train, y_train)
             if self.estimator_type is 'regression':
@@ -68,32 +70,15 @@ class Generalised_Stacking():
                 fold_score = self.feval(y_test, predicted_y)
                 evals.append(fold_score)
                 print('Fold{}: {}'.format(i + 1, evals[i]))
-                i += 1
                 print('CV Mean: ', np.mean(evals), ' Std: ', np.std(evals))
-
+                i += 1
+        return
 
     def _fit_st(self, X, y, model_no):
-        evals = []
-        self.stacking_train = pd.DataFrame(np.nan, index=X.index, columns=self.colnames)
-        for traincv, testcv in self.folds_strategy:
-            # Loop over the different folds.
-            # First create the different datasets to encode.
-            X_train = X.iloc[traincv]
-            X_test = X.iloc[testcv]
-            y_train = y.iloc[traincv]
-            y_test = y.iloc[testcv]
-
-            self.base_estimators[model_no].fit(X_train, y_train)
-            predicted_y = self.base_estimators[model_no].predict(X_test)
-            if self.feval is not None:
-                print("Current Score = ", self.feval(y_test, predicted_y))
-            self.stacking_train.ix[testcv, model_no] = predicted_y
-        # Finally fit against all the data
-        self.base_estimators[model_no].fit(X, y)
+        pass
 
     def _fit_s(self, X, y):
-
-
+        pass
 
     def predict(self, X):
         """

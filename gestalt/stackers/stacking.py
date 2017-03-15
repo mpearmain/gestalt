@@ -4,8 +4,9 @@
 import numpy as np
 import pandas as pd
 from scipy import sparse
+
 import gestalt.stackers.pandas_stacking as pd_stack
-import gestalt.stackers.scipy_csr_stacking as csr_stack
+#import gestalt.stackers.scipy_csr_stacking as csr_stack
 
 
 class Generalised_Stacking():
@@ -35,21 +36,20 @@ class Generalised_Stacking():
         :param feval: The evaluation function e.g sklearn.metrics.log_loss.
                       This function is expected to have the following inputs feval(y_prob, y_true)
         """
-        self.stacking=None
-        self.base_estimators=base_estimators
-        self.folds_strategy=folds_strategy
-        self.feval=feval
+        self.stacking = None
+        self.base_estimators = base_estimators
+        self.folds_strategy = folds_strategy
+        self.feval = feval
 
         # Check that the estimator type has been set.
         if not (estimator_type in ('classification', 'regression')):
-                raise ValueError("estimator_type must be either 'classification', 'regression'")
+            raise ValueError("estimator_type must be either 'classification', 'regression'")
         self.estimator_type = estimator_type
 
         # Check that the stack type has been set.
         if not (stack_type in ('s', 't', 'st', 'cv')):
-                raise ValueError("stack_type must be either 's', 't', 'st', or 'cv'")
+            raise ValueError("stack_type must be either 's', 't', 'st', or 'cv'")
         self.stack_type = stack_type
-
 
     def fit(self, X, y):
         '''
@@ -62,12 +62,12 @@ class Generalised_Stacking():
         if isinstance(X, pd.DataFrame):
             # y is a dataframe object with one col.
             if isinstance(y, pd.DataFrame) & y.shape[1] is 1:
-                self.stacking = pd_stack.Generalised_Stacking(self, self.base_estimators, self.folds_strategy,
+                self.stacking = pd_stack.Generalised_Stacking(self.base_estimators, self.folds_strategy,
                                                               self.estimator_type, self.stack_type, self.feval)
-        if isinstance(X, sparse.csr_matrix):
-            if isinstance(y, np.array):
-                self.stacking = csr_stack.Generalised_Stacking(self, self.base_estimators, self.folds_strategy,
-                                                               self.estimator_type, self.stack_type, self.feval)
+        # if isinstance(X, sparse.csr_matrix):
+        #     if isinstance(y, np.array):
+        #         self.stacking = csr_stack.Generalised_Stacking(self.base_estimators, self.folds_strategy,
+        #                                                        self.estimator_type, self.stack_type, self.feval)
         self.stacking.fit(X, y)
 
     def predict(self, X):
@@ -78,7 +78,7 @@ class Generalised_Stacking():
         return self.stacking.predict(X)
 
     def predict_proba(self, X):
-        if self.estimator_type is not 'classificatrion':
+        if self.estimator_type is not 'classification':
             raise ValueError("predit_proba can only be called on classification estimator_type problems")
         if self.stacking is None:
             raise ValueError("Fit must have been called before you can use `predict_proba`")

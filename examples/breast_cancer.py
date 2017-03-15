@@ -21,37 +21,14 @@ train_x, test_x, target_x, target_y = train_test_split(data, target, test_size=0
 # Test out Gestalt.
 import pandas as pd
 from sklearn.model_selection import KFold
-from gestalt.stackers import stacking
-from gestalt.estimator_wrappers.wrap_xgb import XGBClassifier
+from gestalt.stackers.stacking import Generalised_Stacking
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import log_loss
 
-skf = KFold(n_splits=10, random_state=42, shuffle=True)
+skf = KFold(n_splits=3, random_state=42, shuffle=True)
+b_classifiers = [RandomForestClassifier(n_estimators=100, n_jobs=18, random_state=42)]
 
-b_classifiers = [RandomForestClassifier(),
-                 XGBClassifier()]
+b_cancer = Generalised_Stacking(base_estimators=b_classifiers, estimator_type='classification', feval=log_loss,
+                                stack_type='cv', folds_strategy= skf)
 
-b_cancer =
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+b_cancer.fit(pd.DataFrame(train_x), pd.DataFrame(target_x))
