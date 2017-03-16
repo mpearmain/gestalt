@@ -29,6 +29,6 @@ skf = KFold(n_splits=3, random_state=42, shuffle=True)
 estimators = [RandomForestRegressor(n_estimators=100, n_jobs=18, random_state=42)]
 
 for stype in ['t', 'cv']:
-    b_cancer = GeneralisedStacking(base_estimators=estimators, estimator_type='regression', feval=mse,
+    boston = GeneralisedStacking(base_estimators=estimators, estimator_type='regression', feval=mse,
                                    stack_type=stype, folds_strategy= skf)
-    b_cancer.fit(pd.DataFrame(train_x), pd.DataFrame(target_x))
+    boston.fit(pd.DataFrame(train_x), pd.DataFrame(target_x))

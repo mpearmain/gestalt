@@ -1,5 +1,5 @@
 """
-Breast Cancer example of usage
+Iris example of multiclass usage
 A simple example of how to use gestalt
   1. Use custom wrapper for XGB
   2. Create a set of Base Classifiers
@@ -8,12 +8,13 @@ A simple example of how to use gestalt
 
 """
 
-from sklearn.datasets import load_breast_cancer
+from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
+from gestalt.utils.multiclass_logloss import mlogloss
 
 ########################################################################################################################
 # Grab data and save base
-data, target = load_breast_cancer(return_X_y=True)
+data, target = load_iris(return_X_y=True)
 train_x, test_x, target_x, target_y = train_test_split(data, target, test_size=0.1, random_state=42)
 
 ########################################################################################################################
@@ -29,6 +30,7 @@ skf = KFold(n_splits=3, random_state=42, shuffle=True)
 estimators = [RandomForestClassifier(n_estimators=100, n_jobs=18, random_state=42)]
 
 for stype in ['t', 'cv']:
-    b_cancer = GeneralisedStacking(base_estimators=estimators, estimator_type='classification', feval=log_loss,
-                                   stack_type=stype, folds_strategy= skf)
-    b_cancer.fit(pd.DataFrame(train_x), pd.DataFrame(target_x))
+    iris = GeneralisedStacking(base_estimators=estimators, estimator_type='classification', feval=mlogloss,
+                               stack_type=stype, folds_strategy=skf)
+
+    iris.fit(pd.DataFrame(train_x), pd.DataFrame(target_x))
