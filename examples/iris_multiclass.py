@@ -35,7 +35,7 @@ estimators = {RandomForestClassifier(n_estimators=100, n_jobs=8, random_state=42
                                     'silent': 1}):
                   'XGB1'}
 
-for stype in ['t', 'cv', 'st']:
+for stype in ['t', 'cv', 'st', 's']:
     iris = GeneralisedStacking(base_estimators_dict=estimators,
                                estimator_type='classification',
                                feval=mlogloss,

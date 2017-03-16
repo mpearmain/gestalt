@@ -47,10 +47,10 @@ class GeneralisedStacking:
         elif self.estimator_type is 'regression' or self.num_classes == 2:
             self.stacking_train = pd.DataFrame(np.nan, index=X.index, columns=self.base_estimators_names)
 
+        print("Fitting type", self.stack_type, "stack.")
         for model_no in range(len(self.base_estimators)):
             print("Running Model (", self.base_estimators_names[model_no], ")",
                   model_no + 1, "of", len(self.base_estimators))
-            print("Fitting type", self.stack_type, "stack.")
             if self.stack_type is 't':
                 self._fit_t(X, y, model_no)
             elif self.stack_type is 'cv':
@@ -184,7 +184,6 @@ class GeneralisedStacking:
         # Last part add to the fold estimators
         self.fold_estimators = self._dict_extend(self.fold_estimators,
                                                  {self.base_estimators_names[model_no]: fold_fits})
-        print(self.fold_estimators)
         return
 
     def predict(self, X):
@@ -268,7 +267,10 @@ class GeneralisedStacking:
         # and then take the mean average.
         predicted_y = 0
         for model in list(self.base_estimators_names[model_no]):
+            print(model)
             for fold in list(model):
+                print(fold)
+                print(type(fold))
                 predicted_y += fold.values().predict_proba(X)
             predicted_y /= self.folds_strategy.n_splits
 

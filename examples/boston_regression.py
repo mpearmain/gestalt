@@ -30,7 +30,7 @@ skf = KFold(n_splits=3, random_state=42, shuffle=True)
 estimators = {RandomForestRegressor(n_estimators=100, n_jobs=8, random_state=42): 'RFR1',
               XGBRegressor(num_round=50, verbose_eval=False, params={'silent': 1}): 'XGB1'}
 
-for stype in ['t', 'cv', 'st']:
+for stype in ['t', 'cv', 'st', 's']:
     boston = GeneralisedStacking(base_estimators_dict=estimators,
                                  estimator_type='regression',
                                  feval=mse,
