@@ -170,9 +170,7 @@ class GeneralisedStacking:
             # Finally save the base_estimator.fit object for each fold of the data set.
             # In predict we need to loop through these to get an average prediction for the test set.
             # We create a model specific dictionary and we append each fold to this
-            fold_fits = self._dict_extend(fold_fits,
-                                          {self.base_estimators_names[model_no] + 'fold' + str(i):
-                                               self.base_estimators[model_no]})
+            fold_fits[self.base_estimators_names[model_no] + 'fold' + str(i)] = self.base_estimators[model_no]
             # Evaluate the Folds
             if self.feval is not None:
                 fold_score = self.feval(y_test, predicted_y)
@@ -182,8 +180,7 @@ class GeneralisedStacking:
 
         print('CV Mean: ', np.mean(evals), ' Std: ', np.std(evals))
         # Last part add to the fold estimators
-        self.fold_estimators = self._dict_extend(self.fold_estimators,
-                                                 {self.base_estimators_names[model_no]: fold_fits})
+        self.fold_estimators[self.base_estimators_names[model_no]] = fold_fits
         return
 
     def predict(self, X):
@@ -199,7 +196,7 @@ class GeneralisedStacking:
                   model_no + 1, "of", len(self.base_estimators))
             if self.stack_type is 't':
                 self._predict_t(X, model_no, stacking_predict_data)
-            elif self._predict_type_cv is 'cv':
+            elif self.stack_type is 'cv':
                 print("No predictions available for CV type, try 't', 's', or 'st'")
             elif self.stack_type is 'st':
                 # This uses the same function to train as predict t so we can reuse the same function.
@@ -260,20 +257,23 @@ class GeneralisedStacking:
         return stacking_predict_data
 
     def _predict_s(self, X, model_no, stacking_predict_data):
-        pass
+        # To get the averaged predicted_y we have to loop through all the base_estimators for that model from each fold
+        # and then take the mean average.
+        predicted_y = 0
+        for estimator in self.fold_estimators[self.base_estimators_names[model_no]].values():
+            predicted_y += estimator.predict(X)
+        predicted_y /= self.folds_strategy.n_splits
+
+        stacking_predict_data.ix[:, self.base_estimators_names[model_no]] = predicted_y
+        return stacking_predict_data
 
     def _predict_proba_s(self, X, model_no, stacking_predict_data):
         # To get the averaged predicted_y we have to loop through all the base_estimators for that model from each fold
         # and then take the mean average.
         predicted_y = 0
-        for model in list(self.base_estimators_names[model_no]):
-            print(model)
-            for fold in list(model):
-                print(fold)
-                print(type(fold))
-                predicted_y += fold.values().predict_proba(X)
-            predicted_y /= self.folds_strategy.n_splits
-
+        for estimator in self.fold_estimators[self.base_estimators_names[model_no]].values():
+            predicted_y += estimator.predict_proba(X)
+        predicted_y /= self.folds_strategy.n_splits
 
         if self.num_classes == 2:
             if 'sklearn' in str(type(self.base_estimators[model_no])):

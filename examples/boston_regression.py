@@ -37,3 +37,4 @@ for stype in ['t', 'cv', 'st', 's']:
                                  stack_type=stype,
                                  folds_strategy=skf)
     boston.fit(pd.DataFrame(train_x), pd.DataFrame(target_x))
+    boston.predict(pd.DataFrame(test_x))

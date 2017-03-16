@@ -42,3 +42,4 @@ for stype in ['t', 'cv', 'st', 's']:
                                stack_type=stype,
                                folds_strategy=skf)
     iris.fit(pd.DataFrame(train_x), pd.DataFrame(target_x))
+    iris.predict_proba(pd.DataFrame(test_x))
