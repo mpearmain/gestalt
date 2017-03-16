@@ -228,44 +228,4 @@ class Gestalt(BaseEstimator):
             print('Fold{}: {}'.format(i + 1, evals[i]))
         print('{} CV Mean: '.format(Gestalt.eval_type), np.mean(evals), ' Std: ', np.std(evals))
 
-        # Saving
-        if self.kind != 'cv':
-            print('Saving results')
-            if (Gestalt.problem_type == 'classification' and
-                        Gestalt.classification_type == 'binary') or (Gestalt.problem_type == 'regression'):
-                dataset_blend_train.to_csv(PATH + '{}_all_fold.csv'.format(self.name))
-                dataset_blend_test.to_csv(PATH + '{}_test.csv'.format(self.name))
 
-            elif Gestalt.problem_type == 'classification' and Gestalt.classification_type == 'multi-class':
-                dataset_blend_train.to_csv(PATH + '{}_all_fold.csv'.format(self.name))
-                dataset_blend_test.to_csv(PATH + '{}_test.csv'.format(self.name))
-
-        if self.kind == 'st':
-            # Stacking(cross-validation)
-            clf = self.build_model()
-            if 'sklearn' in str(type(clf)):
-                y = y.ix[:, 0]
-            clf.fit(X, y)
-            if Gestalt.problem_type == 'classification':
-                if Gestalt.classification_type == 'binary':
-                    if 'sklearn' in str(type(clf)):
-                        y_submission = clf.predict_proba(test)[:, 1]
-                    else:
-                        y_submission = clf.predict_proba(test)
-                    y_submission.to_csv(PATH + '{}_test_FullTrainingData.csv'.format(self.name))
-
-                elif Gestalt.classification_type == 'multi-class':
-                    if 'sklearn' in str(type(clf)):
-                        y_submission = pd.DataFrame(clf.predict_proba(test), index=test.index, columns=multi_cols)
-                    else:
-                        y_submission = clf.predict_proba(test)
-                        y_submission = test.index
-                        y_submission.columns = multi_cols
-
-                    y_submission.to_csv(PATH + '{}_test_FullTrainingData.csv'.format(self.name))
-
-            elif Gestalt.problem_type == 'regression':
-                y_submission = clf.predict(test)
-                y_submission.to_csv(PATH + '{}_test_FullTrainingData.csv'.format(self.name))
-
-        return

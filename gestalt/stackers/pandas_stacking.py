@@ -16,7 +16,15 @@ class GeneralisedStacking:
         self.feval = feval
         self.stacking_train = None
         self.num_classes = None
-        self.base_fit = []
+        self.fold_estimators = {}
+
+    @staticmethod
+    def _dict_extend(a, b):
+        """Create a new dictionary with a's properties extended by b, without overwriting.
+            extend({'a':1,'b':2},{'b':3,'c':4})
+        {'a': 1, 'c': 4, 'b': 2}
+        """
+        return dict(b, **a)
 
     def fit(self, X, y):
         """ A generic fit method for meta stacking.
@@ -71,6 +79,7 @@ class GeneralisedStacking:
             y_train = y.iloc[traincv][0].values
             y_test = y.iloc[testcv][0].values
 
+            # Fit on each fold for each model.
             self.base_estimators[model_no].fit(X_train, y_train)
             if self.estimator_type is 'regression':
                 predicted_y = self.base_estimators[model_no].predict(X_test)
@@ -100,13 +109,12 @@ class GeneralisedStacking:
             y_train = y.iloc[traincv][0].values
             y_test = y.iloc[testcv][0].values
 
-            # Fit on each specific model.
+            # Fit on each fold for each model.
             self.base_estimators[model_no].fit(X_train, y_train)
             # Predict on the out of fold set
             if self.estimator_type is 'regression':
                 predicted_y = self.base_estimators[model_no].predict(X_test)
                 self.stacking_train.ix[testcv, self.base_estimators_names[model_no]] = predicted_y
-
             elif self.estimator_type is 'classification':
                 predicted_y = self.base_estimators[model_no].predict_proba(X_test)
                 if self.num_classes == 2:
@@ -116,30 +124,163 @@ class GeneralisedStacking:
                 elif self.num_classes > 2:
                     self.stacking_train.ix[testcv, [self.base_estimators_names[model_no] +
                                                     '_class_' + str(i) for i in range(self.num_classes)]] = predicted_y
-
+            # Evaluate the Folds
             if self.feval is not None:
                 fold_score = self.feval(y_test, predicted_y)
                 evals.append(fold_score)
                 print('Fold{}: {}'.format(i + 1, evals[i]))
-
                 i += 1
+
         print('CV Mean: ', np.mean(evals), ' Std: ', np.std(evals))
         # Finally fit against all the data
         self._fit_t(X, y, model_no)
         return
 
-    def _fit_s(self, X, y):
-        pass
+    def _fit_s(self, X, y, model_no):
+        # Fit a model that stacks for CV folds, predicts the out-of-fold rows for X, and then runs a predict on the
+        # test set, the final test set prediction is the average from all fold models.
+        evals = []
+        fold_fits = {}
+        i = 0
+
+        for traincv, testcv in self.folds_strategy.split(X, y):
+            # Loop over the different folds.
+            X_train = X.iloc[traincv]
+            X_test = X.iloc[testcv]
+            y_train = y.iloc[traincv][0].values
+            y_test = y.iloc[testcv][0].values
+
+            # Fit on each fold for each model.
+            self.base_estimators[model_no].fit(X_train, y_train)
+            # Predict on the out of fold set
+            if self.estimator_type is 'regression':
+                predicted_y = self.base_estimators[model_no].predict(X_test)
+                self.stacking_train.ix[testcv, self.base_estimators_names[model_no]] = predicted_y
+            elif self.estimator_type is 'classification':
+                predicted_y = self.base_estimators[model_no].predict_proba(X_test)
+                if self.num_classes == 2:
+                    if 'sklearn' in str(type(self.base_estimators[model_no])):
+                        predicted_y = predicted_y[:, 1]
+                    self.stacking_train.ix[testcv, self.base_estimators_names[model_no]] = predicted_y
+                elif self.num_classes > 2:
+                    self.stacking_train.ix[testcv,
+                                           [self.base_estimators_names[model_no] +
+                                            '_class_' + str(j) for j in range(self.num_classes)]] = predicted_y
+
+            # Finally save the base_estimator.fit object for each fold of the data set.
+            # In predict we need to loop through these to get an average prediction for the test set.
+            # We create a model specific dictionary and we append each fold to this
+            fold_fits = self._dict_extend(fold_fits,
+                                          {self.base_estimators_names[model_no] + 'fold' + str(i):
+                                               self.base_estimators[model_no]})
+            # Evaluate the Folds
+            if self.feval is not None:
+                fold_score = self.feval(y_test, predicted_y)
+                evals.append(fold_score)
+                print('Fold{}: {}'.format(i + 1, evals[i]))
+            i += 1
+
+        print('CV Mean: ', np.mean(evals), ' Std: ', np.std(evals))
+        # Last part add to the fold estimators
+        self.fold_estimators = self._dict_extend(self.fold_estimators,
+                                                 {self.base_estimators_names[model_no]: fold_fits})
+        print(self.fold_estimators)
+        return
 
     def predict(self, X):
         """
         :param X: The data to apply the fitted model from fit
         :return: The predicted value of the regression model
         """
-        stacking_predict_data = pd.DataFrame(np.nan, index=X.index, columns=self.colnames)
+        # We only get regression problems
+        stacking_predict_data = pd.DataFrame(np.nan, index=X.index, columns=self.base_estimators_names)
 
         for model_no in range(len(self.base_estimators)):
-            stacking_predict_data.ix[:, model_no] = self.base_estimators[model_no].predict(X)
+            print("Predicting Model (", self.base_estimators_names[model_no], ")",
+                  model_no + 1, "of", len(self.base_estimators))
+            if self.stack_type is 't':
+                self._predict_t(X, model_no, stacking_predict_data)
+            elif self._predict_type_cv is 'cv':
+                print("No predictions available for CV type, try 't', 's', or 'st'")
+            elif self.stack_type is 'st':
+                # This uses the same function to train as predict t so we can reuse the same function.
+                self._predict_t(X, model_no, stacking_predict_data)
+            elif self.stack_type is 's':
+                self._predict_s(X, model_no, stacking_predict_data)
+        return
+
+    def predict_proba(self, X):
+        """
+        :param X: The data to apply the fitted model from fit
+        :return: The predicted value of the regression model
+        """
+        # Create a holding dataframe to populate with out of fold predictions.
+        if self.num_classes > 2:
+            # Generate the multiclass stracking trainset - as many cols as models * classes.
+            stacking_predict_data = pd.DataFrame(np.nan,
+                                                 index=X.index,
+                                                 columns=[model_name + '_class_' + str(i)
+                                                          for i in range(self.num_classes)
+                                                          for model_name in self.base_estimators_names])
+        # Create a single col per model for binary classification problems.
+        elif self.num_classes == 2:
+            stacking_predict_data = pd.DataFrame(np.nan, index=X.index, columns=self.base_estimators_names)
+
+        for model_no in range(len(self.base_estimators)):
+            print("Predicting Model (", self.base_estimators_names[model_no], ")",
+                  model_no + 1, "of", len(self.base_estimators))
+            if self.stack_type is 't':
+                self._predict_proba_t(X, model_no, stacking_predict_data)
+            elif self.stack_type is 'cv':
+                print("No predictions available for CV type, try 't', 's', or 'st'")
+                stacking_predict_data = None
+            elif self.stack_type is 'st':
+                # This uses the same function to train as predict t so we can reuse the same function.
+                self._predict_proba_t(X, model_no, stacking_predict_data)
+            elif self.stack_type is 's':
+                self._predict_proba_s(X, model_no, stacking_predict_data)
+
+        return stacking_predict_data
+
+    def _predict_t(self, X, model_no, stacking_predict_data):
+        # Predict on the test set of data X
+        predicted_y = self.base_estimators[model_no].predict(X)
+        stacking_predict_data.ix[:, self.base_estimators_names[model_no]] = predicted_y
+        return stacking_predict_data
+
+    def _predict_proba_t(self, X, model_no, stacking_predict_data):
+        predicted_y = self.base_estimators[model_no].predict_proba(X)
+        if self.num_classes == 2:
+            if 'sklearn' in str(type(self.base_estimators[model_no])):
+                predicted_y = predicted_y[:, 1]
+            stacking_predict_data.ix[:, self.base_estimators_names[model_no]] = predicted_y
+        elif self.num_classes > 2:
+            multicol_names = \
+                [self.base_estimators_names[model_no] + '_class_' + str(i) for i in range(self.num_classes)]
+            stacking_predict_data.ix[:, multicol_names] = predicted_y
+        return stacking_predict_data
+
+    def _predict_s(self, X, model_no, stacking_predict_data):
+        pass
+
+    def _predict_proba_s(self, X, model_no, stacking_predict_data):
+        # To get the averaged predicted_y we have to loop through all the base_estimators for that model from each fold
+        # and then take the mean average.
+        predicted_y = 0
+        for model in list(self.base_estimators_names[model_no]):
+            for fold in list(model):
+                predicted_y += fold.values().predict_proba(X)
+            predicted_y /= self.folds_strategy.n_splits
+
+
+        if self.num_classes == 2:
+            if 'sklearn' in str(type(self.base_estimators[model_no])):
+                predicted_y = predicted_y[:, 1]
+            stacking_predict_data.ix[:, self.base_estimators_names[model_no]] = predicted_y
+        elif self.num_classes > 2:
+            multicol_names = \
+                [self.base_estimators_names[model_no] + '_class_' + str(i) for i in range(self.num_classes)]
+            stacking_predict_data.ix[:, multicol_names] = predicted_y
         return stacking_predict_data
 
     @property
