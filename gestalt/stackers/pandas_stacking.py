@@ -203,7 +203,8 @@ class GeneralisedStacking:
                 self._predict_t(X, model_no, stacking_predict_data)
             elif self.stack_type is 's':
                 self._predict_s(X, model_no, stacking_predict_data)
-        return
+
+        return stacking_predict_data
 
     def predict_proba(self, X):
         """
@@ -265,6 +266,7 @@ class GeneralisedStacking:
         predicted_y /= self.folds_strategy.n_splits
 
         stacking_predict_data.ix[:, self.base_estimators_names[model_no]] = predicted_y
+
         return stacking_predict_data
 
     def _predict_proba_s(self, X, model_no, stacking_predict_data):
