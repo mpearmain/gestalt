@@ -23,13 +23,21 @@ import pandas as pd
 from sklearn.model_selection import KFold
 from gestalt.stackers.stacking import GeneralisedStacking
 from sklearn.ensemble import RandomForestClassifier
+from gestalt.estimator_wrappers.wrap_xgb import XGBClassifier
 from sklearn.metrics import log_loss
 
 skf = KFold(n_splits=3, random_state=42, shuffle=True)
-estimators = {RandomForestClassifier(n_estimators=100, n_jobs=8, random_state=42): 'RFC1',
-              RandomForestClassifier(n_estimators=50, n_jobs=8, random_state=42): 'RFC2'}
+estimators = {RandomForestClassifier(n_estimators=100, n_jobs=8, random_state=42): 'RFR1',
+              XGBClassifier(num_round=50,
+                            verbose_eval=False,
+                            params={'objective': 'binary:logistic',
+                                    'silent': 1}):
+              'XGB1'}
 
-for stype in ['t', 'cv']:
-    b_cancer = GeneralisedStacking(base_estimators_dict=estimators, estimator_type='classification', feval=log_loss,
-                                   stack_type=stype, folds_strategy=skf)
+for stype in ['cv']:
+    b_cancer = GeneralisedStacking(base_estimators_dict=estimators,
+                                   estimator_type='classification',
+                                   feval=log_loss,
+                                   stack_type=stype,
+                                   folds_strategy=skf)
     b_cancer.fit(pd.DataFrame(train_x), pd.DataFrame(target_x))

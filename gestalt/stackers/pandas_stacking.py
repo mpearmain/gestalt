@@ -15,6 +15,7 @@ class GeneralisedStacking:
         self.stack_type = stack_type
         self.feval = feval
         self.stacking_train = None
+        self.num_classes = None
         self.base_fit = []
 
     def fit(self, X, y):
@@ -23,6 +24,8 @@ class GeneralisedStacking:
         :param X: Train dataset
         :param y: target
         """
+        if self.estimator_type is 'classification':
+            self.num_classes = y[0].nunique()
 
         for model_no in range(len(self.base_estimators)):
             print("Running Model ", model_no + 1, "of", len(self.base_estimators))
@@ -61,7 +64,9 @@ class GeneralisedStacking:
             self.base_estimators[model_no].fit(X_train, y_train)
             if self.estimator_type is 'regression':
                 predicted_y = self.base_estimators[model_no].predict(X_test)
-            elif self.estimator_type is 'classification':
+            elif self.estimator_type is 'classification' and self.num_classes is 2:
+                predicted_y = self.base_estimators[model_no].predict_proba(X_test)
+            elif self.estimator_type is 'classification' and self.num_classes > 2:
                 predicted_y = self.base_estimators[model_no].predict_proba(X_test)
 
             if self.feval is not None:

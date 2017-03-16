@@ -23,15 +23,22 @@ train_x, test_x, target_x, target_y = train_test_split(data, target, test_size=0
 import pandas as pd
 from sklearn.model_selection import KFold
 from gestalt.stackers.stacking import GeneralisedStacking
+from gestalt.estimator_wrappers.wrap_xgb import XGBClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import log_loss
 
 skf = KFold(n_splits=3, random_state=42, shuffle=True)
 estimators = {RandomForestClassifier(n_estimators=100, n_jobs=8, random_state=42): 'RFC1',
-              RandomForestClassifier(n_estimators=250, n_jobs=8, random_state=42): 'RFC2'}
+              XGBClassifier(num_round=50,
+                            verbose_eval=False,
+                            params={'objective': 'multi:softprob',
+                                    'num_class': 3,
+                                    'silent': 1}):
+                  'XGB1'}
 
 for stype in ['t', 'cv']:
-    iris = GeneralisedStacking(base_estimators_dict=estimators, estimator_type='classification', feval=mlogloss,
-                               stack_type=stype, folds_strategy=skf)
-
+    iris = GeneralisedStacking(base_estimators_dict=estimators,
+                               estimator_type='classification',
+                               feval=mlogloss,
+                               stack_type=stype,
+                               folds_strategy=skf)
     iris.fit(pd.DataFrame(train_x), pd.DataFrame(target_x))

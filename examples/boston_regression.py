@@ -23,13 +23,17 @@ import pandas as pd
 from sklearn.model_selection import KFold
 from gestalt.stackers.stacking import GeneralisedStacking
 from sklearn.ensemble import RandomForestRegressor
+from gestalt.estimator_wrappers.wrap_xgb import XGBRegressor
 from sklearn.metrics import mean_squared_error as mse
 
 skf = KFold(n_splits=3, random_state=42, shuffle=True)
 estimators = {RandomForestRegressor(n_estimators=100, n_jobs=8, random_state=42): 'RFR1',
-              RandomForestRegressor(n_estimators=250, n_jobs=8, random_state=42): 'RFR2'}
+              XGBRegressor(num_round=50, verbose_eval=False, params={'silent': 1}): 'XGB1'}
 
 for stype in ['t', 'cv']:
-    boston = GeneralisedStacking(base_estimators_dict=estimators, estimator_type='regression', feval=mse,
-                                 stack_type=stype, folds_strategy=skf)
+    boston = GeneralisedStacking(base_estimators_dict=estimators,
+                                 estimator_type='regression',
+                                 feval=mse,
+                                 stack_type=stype,
+                                 folds_strategy=skf)
     boston.fit(pd.DataFrame(train_x), pd.DataFrame(target_x))
