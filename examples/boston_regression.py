@@ -23,12 +23,12 @@ import pandas as pd
 from sklearn.model_selection import KFold
 from gestalt.stackers.stacking import GeneralisedStacking
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import log_loss
+from sklearn.metrics import mean_squared_error as mse
 
 skf = KFold(n_splits=3, random_state=42, shuffle=True)
-b_classifiers = [RandomForestRegressor(n_estimators=100, n_jobs=18, random_state=42)]
+estimators = [RandomForestRegressor(n_estimators=100, n_jobs=18, random_state=42)]
 
 for stype in ['t', 'cv']:
-    b_cancer = GeneralisedStacking(base_estimators=b_classifiers, estimator_type='classification', feval=log_loss,
+    b_cancer = GeneralisedStacking(base_estimators=estimators, estimator_type='regression', feval=mse,
                                    stack_type=stype, folds_strategy= skf)
     b_cancer.fit(pd.DataFrame(train_x), pd.DataFrame(target_x))
