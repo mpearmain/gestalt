@@ -1,13 +1,15 @@
 import numpy as np
 import pandas as pd
 
+
 class GeneralisedStacking:
     """
     A generalised stacking class specifically designed for use with dense pandas DataFrames.
     """
 
-    def __init__(self, base_estimators, folds_strategy, estimator_type, stack_type, feval):
-        self.base_estimators = base_estimators
+    def __init__(self, base_estimators_dict, folds_strategy, estimator_type, stack_type, feval):
+        self.base_estimators = list(base_estimators_dict.keys())
+        self.base_estimators_names = list(base_estimators_dict.values())
         self.folds_strategy = folds_strategy
         self.estimator_type = estimator_type
         self.stack_type = stack_type
@@ -66,19 +68,21 @@ class GeneralisedStacking:
                 fold_score = self.feval(y_test, predicted_y)
                 evals.append(fold_score)
                 print('Fold{}: {}'.format(i + 1, evals[i]))
-                print('CV Mean: ', np.mean(evals), ' Std: ', np.std(evals))
                 i += 1
+        print('CV Mean: ', np.mean(evals), ' Std: ', np.std(evals))
         return
 
     def _fit_st(self, X, y, model_no):
         # Fit a model that stacks for CV folds, predicts the out-of-fold rows for the X and then runs a full fit on
         # the data to use for preditions.
         evals = []
-        i=0
+        i = 0
+        # Determine the type of
+
         self.stacking_train = pd.DataFrame(np.nan, index=X.index, columns=self.colnames)
+
         for traincv, testcv in self.folds_strategy:
             # Loop over the different folds.
-            # First create the different datasets to encode.
             X_train = X.iloc[traincv]
             X_test = X.iloc[testcv]
             y_train = y.iloc[traincv]
@@ -90,9 +94,9 @@ class GeneralisedStacking:
                 fold_score = self.feval(y_test, predicted_y)
                 evals.append(fold_score)
                 print('Fold{}: {}'.format(i + 1, evals[i]))
-                print('CV Mean: ', np.mean(evals), ' Std: ', np.std(evals))
                 self.stacking_train.ix[testcv, model_no] = predicted_y
                 i += 1
+        print('CV Mean: ', np.mean(evals), ' Std: ', np.std(evals))
         # Finally fit against all the data
         self._fit_t(X, y, model_no)
 

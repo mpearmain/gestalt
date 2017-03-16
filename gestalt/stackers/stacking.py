@@ -16,28 +16,35 @@ class GeneralisedStacking:
     Within Gestalt we support two data types for running stackers - Dense pandas DataFrames and scipy sparse csr_matrix
     """
 
-    def __init__(self, base_estimators, folds_strategy, estimator_type, stack_type, feval):
+    def __init__(self, base_estimators_dict, folds_strategy, estimator_type, stack_type, feval):
         """
-
-        :param base_estimators: A list of base classifiers for stacking.
+        :param base_estimators_dict: A dictionary of estimator type and name (this avoids the awkward arbitrary naming of
+                                columns when storing meta level information).
         :param folds_strategy: An sklearn.model_selection generator for either Kfolds or Stratified Kfold.
         :param estimator_type: Classification or Regression (if classification we use, nuniques to determine multi-class
                             or binary prediction.
         :param stack_type: Defines the type of model stacking we want to run.
-        's': Stacking only. Saving an oof prediction and average of test prediction based on fold-train stackers.
+        's': Stack averaging. Saving an oof prediction for the train set and an average of test prediction based on
+             per fold estimator fits.
              -- Useful for quasi-bagging of results and important if feature transforms have been performed at a
-                fold level (e.g bayesian encoding in transformers)
+                fold level (e.g bayesian encoding in transformers) that the same folds are used in building the
+                meta-models. -- DATA LEAKAGE COULD OCCUR!
         't': Training all data and predict test.
              -- Least powerful, it essentially runs fit and then predicts, no CV available but faster than 'st'
         'st': Stacking and then training on all data to predict test using save final model with cross-validation
-              -- Use this for train / test splits of data setup like time series, but use stacks that are stratified
-        'cv': Only cross validation without saving the prediction
+              -- Use this for train / test splits of data setup like time series
+        'cv': Only cross validation without saving the prediction.
               -- Use this for the final level ensembler to get a feel for the loss.
         :param feval: The evaluation function e.g sklearn.metrics.log_loss.
                       This function is expected to have the following inputs feval(y_prob, y_true)
         """
         self.stacking = None
-        self.base_estimators = base_estimators
+        # Check that the estimator is a dictionary of estimators and names.
+        if not isinstance(base_estimators_dict, dict):
+            raise ValueError("\nbase_estimators_dict must be a dictionary of estimator and name e.g\n"
+                             "estimators = {RandomForestClassifier(n_estimators=123, random_state=42): 'RFC1',\n"
+                             "              RandomForestClassifier(n_estimators=321, random_state=56), 'RFC2'}")
+        self.base_estimators_dict = base_estimators_dict
         self.folds_strategy = folds_strategy
         self.feval = feval
 
@@ -52,21 +59,21 @@ class GeneralisedStacking:
         self.stack_type = stack_type
 
     def fit(self, X, y):
-        '''
+        """
 
         :param X: The source training data, either pandas or scipy csr
         :param y: The source target variable
         :return:
-        '''
+        """
 
         if isinstance(X, pd.DataFrame):
             # y is a dataframe object with one col.
             if isinstance(y, pd.DataFrame) & y.shape[1] is 1:
-                self.stacking = pd_stack.GeneralisedStacking(self.base_estimators, self.folds_strategy,
+                self.stacking = pd_stack.GeneralisedStacking(self.base_estimators_dict, self.folds_strategy,
                                                              self.estimator_type, self.stack_type, self.feval)
         if isinstance(X, sparse.csr_matrix):
             if isinstance(y, np.array):
-                self.stacking = csr_stack.GeneralisedStacking(self.base_estimators, self.folds_strategy,
+                self.stacking = csr_stack.GeneralisedStacking(self.base_estimators_dict, self.folds_strategy,
                                                               self.estimator_type, self.stack_type, self.feval)
         self.stacking.fit(X, y)
 

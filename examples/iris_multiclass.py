@@ -27,10 +27,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import log_loss
 
 skf = KFold(n_splits=3, random_state=42, shuffle=True)
-estimators = [RandomForestClassifier(n_estimators=100, n_jobs=18, random_state=42)]
+estimators = {RandomForestClassifier(n_estimators=100, n_jobs=8, random_state=42): 'RFC1',
+              RandomForestClassifier(n_estimators=250, n_jobs=8, random_state=42): 'RFC2'}
 
 for stype in ['t', 'cv']:
-    iris = GeneralisedStacking(base_estimators=estimators, estimator_type='classification', feval=mlogloss,
+    iris = GeneralisedStacking(base_estimators_dict=estimators, estimator_type='classification', feval=mlogloss,
                                stack_type=stype, folds_strategy=skf)
 
     iris.fit(pd.DataFrame(train_x), pd.DataFrame(target_x))
