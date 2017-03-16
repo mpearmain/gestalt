@@ -27,9 +27,9 @@ class GeneralisedStacking:
         if self.estimator_type is 'classification':
             self.num_classes = y[0].nunique()
 
-        # Create a holding dataframe to fill out of fold predictions in
+        # Create a holding dataframe to populate with out of fold predictions.
         if self.estimator_type is 'classification' and self.num_classes > 2:
-            # Generate the multiclass stracking trainset  - i.e where we save oot of fold predictions.
+            # Generate the multiclass stracking trainset - as many cols as models * classes.
             self.stacking_train = pd.DataFrame(np.nan,
                                                index=X.index,
                                                columns=[model_name + '_class_' + str(i)
@@ -105,16 +105,23 @@ class GeneralisedStacking:
             # Predict on the out of fold set
             if self.estimator_type is 'regression':
                 predicted_y = self.base_estimators[model_no].predict(X_test)
+                self.stacking_train.ix[testcv, self.base_estimators_names[model_no]] = predicted_y
+
             elif self.estimator_type is 'classification':
                 predicted_y = self.base_estimators[model_no].predict_proba(X_test)
-                if self.num_classes is 2 and 'sklearn' in str(type(self.base_estimators[model_no])):
-                    predicted_y = predicted_y[:, 1]
+                if self.num_classes == 2:
+                    if 'sklearn' in str(type(self.base_estimators[model_no])):
+                        predicted_y = predicted_y[:, 1]
+                    self.stacking_train.ix[testcv, self.base_estimators_names[model_no]] = predicted_y
+                elif self.num_classes > 2:
+                    self.stacking_train.ix[testcv, [self.base_estimators_names[model_no] +
+                                                    '_class_' + str(i) for i in range(self.num_classes)]] = predicted_y
 
             if self.feval is not None:
                 fold_score = self.feval(y_test, predicted_y)
                 evals.append(fold_score)
                 print('Fold{}: {}'.format(i + 1, evals[i]))
-                self.stacking_train.ix[testcv, self.base_estimators_names[model_no]] = predicted_y
+
                 i += 1
         print('CV Mean: ', np.mean(evals), ' Std: ', np.std(evals))
         # Finally fit against all the data
