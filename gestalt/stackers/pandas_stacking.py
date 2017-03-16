@@ -27,6 +27,18 @@ class GeneralisedStacking:
         if self.estimator_type is 'classification':
             self.num_classes = y[0].nunique()
 
+        # Create a holding dataframe to fill out of fold predictions in
+        if self.estimator_type is 'classification' and self.num_classes > 2:
+            # Generate the multiclass stracking trainset  - i.e where we save oot of fold predictions.
+            self.stacking_train = pd.DataFrame(np.nan,
+                                               index=X.index,
+                                               columns=[model_name + '_class_' + str(i)
+                                                        for i in range(self.num_classes)
+                                                        for model_name in self.base_estimators_names])
+        # Create a single col per model for binary classification or regression problems.
+        elif self.estimator_type is 'regression' or self.num_classes == 2:
+            self.stacking_train = pd.DataFrame(np.nan, index=X.index, columns=self.base_estimators_names)
+
         for model_no in range(len(self.base_estimators)):
             print("Running Model (", self.base_estimators_names[model_no], ")",
                   model_no + 1, "of", len(self.base_estimators))
@@ -80,28 +92,34 @@ class GeneralisedStacking:
         # the data to use for preditions.
         evals = []
         i = 0
-        # Determine the type of
 
-        self.stacking_train = pd.DataFrame(np.nan, index=X.index, columns=self.colnames)
-
-        for traincv, testcv in self.folds_strategy:
+        for traincv, testcv in self.folds_strategy.split(X, y):
             # Loop over the different folds.
             X_train = X.iloc[traincv]
             X_test = X.iloc[testcv]
-            y_train = y.iloc[traincv]
-            y_test = y.iloc[testcv]
+            y_train = y.iloc[traincv][0].values
+            y_test = y.iloc[testcv][0].values
 
+            # Fit on each specific model.
             self.base_estimators[model_no].fit(X_train, y_train)
-            predicted_y = self.base_estimators[model_no].predict(X_test)
+            # Predict on the out of fold set
+            if self.estimator_type is 'regression':
+                predicted_y = self.base_estimators[model_no].predict(X_test)
+            elif self.estimator_type is 'classification':
+                predicted_y = self.base_estimators[model_no].predict_proba(X_test)
+                if self.num_classes is 2 and 'sklearn' in str(type(self.base_estimators[model_no])):
+                    predicted_y = predicted_y[:, 1]
+
             if self.feval is not None:
                 fold_score = self.feval(y_test, predicted_y)
                 evals.append(fold_score)
                 print('Fold{}: {}'.format(i + 1, evals[i]))
-                self.stacking_train.ix[testcv, model_no] = predicted_y
+                self.stacking_train.ix[testcv, self.base_estimators_names[model_no]] = predicted_y
                 i += 1
         print('CV Mean: ', np.mean(evals), ' Std: ', np.std(evals))
         # Finally fit against all the data
         self._fit_t(X, y, model_no)
+        return
 
     def _fit_s(self, X, y):
         pass

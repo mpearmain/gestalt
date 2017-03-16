@@ -97,4 +97,4 @@ class GeneralisedStacking:
         Use the predict method to score new data for each classifier.
         :return: A pandas dataframe object of stacked predictions of predict
         """
-        return self.stacking.meta_train()
+        return self.stacking.meta_train
