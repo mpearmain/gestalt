@@ -6,7 +6,7 @@ import pandas as pd
 from scipy import sparse
 
 import gestalt.stackers.pandas_stacking as pd_stack
-#import gestalt.stackers.scipy_csr_stacking as csr_stack
+import gestalt.stackers.scipy_csr_stacking as csr_stack
 
 
 class GeneralisedStacking:
@@ -62,12 +62,12 @@ class GeneralisedStacking:
         if isinstance(X, pd.DataFrame):
             # y is a dataframe object with one col.
             if isinstance(y, pd.DataFrame) & y.shape[1] is 1:
-                self.stacking = pd_stack.Generalised_Stacking(self.base_estimators, self.folds_strategy,
+                self.stacking = pd_stack.GeneralisedStacking(self.base_estimators, self.folds_strategy,
+                                                             self.estimator_type, self.stack_type, self.feval)
+        if isinstance(X, sparse.csr_matrix):
+            if isinstance(y, np.array):
+                self.stacking = csr_stack.GeneralisedStacking(self.base_estimators, self.folds_strategy,
                                                               self.estimator_type, self.stack_type, self.feval)
-        # if isinstance(X, sparse.csr_matrix):
-        #     if isinstance(y, np.array):
-        #         self.stacking = csr_stack.Generalised_Stacking(self.base_estimators, self.folds_strategy,
-        #                                                        self.estimator_type, self.stack_type, self.feval)
         self.stacking.fit(X, y)
 
     def predict(self, X):
