@@ -28,18 +28,16 @@ class GeneralisedStacking:
             self.num_classes = y[0].nunique()
 
         for model_no in range(len(self.base_estimators)):
-            print("Running Model ", model_no + 1, "of", len(self.base_estimators))
+            print("Running Model (", self.base_estimators_names[model_no], ")",
+                  model_no + 1, "of", len(self.base_estimators))
+            print("Fitting type", self.stack_type, "stack.")
             if self.stack_type is 't':
-                print("Fitting type t stack.")
                 self._fit_t(X, y, model_no)
             elif self.stack_type is 'cv':
-                print("Fitting type cv stack.")
                 self._fit_cv(X, y, model_no)
             elif self.stack_type is 'st':
-                print("Fitting type st stack.")
                 self._fit_st(X, y, model_no)
             elif self.stack_type is 's':
-                print("Fitting type s stack.")
                 self._fit_s(X, y, model_no)
         return
 
@@ -64,10 +62,10 @@ class GeneralisedStacking:
             self.base_estimators[model_no].fit(X_train, y_train)
             if self.estimator_type is 'regression':
                 predicted_y = self.base_estimators[model_no].predict(X_test)
-            elif self.estimator_type is 'classification' and self.num_classes is 2:
+            elif self.estimator_type is 'classification':
                 predicted_y = self.base_estimators[model_no].predict_proba(X_test)
-            elif self.estimator_type is 'classification' and self.num_classes > 2:
-                predicted_y = self.base_estimators[model_no].predict_proba(X_test)
+                if self.num_classes is 2 and 'sklearn' in str(type(self.base_estimators[model_no])):
+                    predicted_y = predicted_y[:, 1]
 
             if self.feval is not None:
                 fold_score = self.feval(y_test, predicted_y)

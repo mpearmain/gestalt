@@ -31,12 +31,12 @@ class XGBClassifier(BaseEstimator, ClassifierMixin):
         self.num_round = num_round
         self.early_stopping_rounds = early_stopping_rounds
         self.verbose = verbose_eval
-        self.xgb = None
+        self.clf = None
 
     def fit(self, X, y):
 
         dtrain = xgb.DMatrix(X, label=y)
-        self.xgb = xgb.train(params=self.params,
+        self.clf = xgb.train(params=self.params,
                              dtrain=dtrain,
                              num_boost_round=self.num_round,
                              early_stopping_rounds=self.early_stopping_rounds,
@@ -45,7 +45,7 @@ class XGBClassifier(BaseEstimator, ClassifierMixin):
 
     def predict_proba(self, X):
         dtest = xgb.DMatrix(X)
-        preds = pd.DataFrame(data=self.xgb.predict(dtest), index=X.index)
+        preds = self.clf.predict(dtest)
         return preds
 
 
@@ -87,6 +87,6 @@ class XGBRegressor(BaseEstimator, RegressorMixin):
 
     def predict(self, X):
         dtest = xgb.DMatrix(X)
-        preds = pd.DataFrame(self.xgb.predict(dtest))
+        preds = self.xgb.predict(dtest)
         return preds
 
