@@ -35,10 +35,17 @@ estimators = {RandomForestClassifier(n_estimators=100, n_jobs=8, random_state=42
               'XGB1'}
 
 for stype in ['t', 'cv', 'st', 's']:
+    print('\n')
     b_cancer = GeneralisedStacking(base_estimators_dict=estimators,
                                    estimator_type='classification',
                                    feval=log_loss,
                                    stack_type=stype,
                                    folds_strategy=skf)
     b_cancer.fit(pd.DataFrame(train_x), pd.DataFrame(target_x))
+    # Get the data from the stacking for the train set.
+    b_cancer.meta_train
+    # Make predictions.
     b_cancer.predict_proba(pd.DataFrame(test_x))
+    
+# This gives us level one stacking.    
+# We can feed this forward to _n_ levels of stacking     
