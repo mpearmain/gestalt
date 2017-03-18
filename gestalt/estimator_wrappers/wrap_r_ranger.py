@@ -64,4 +64,4 @@ class RangerClassifier(BaseEstimator, ClassifierMixin):
         pandas_preds = ro.pandas2ri.ri2py_dataframe(pr.rx('predictions')[0])
         if self.num_classes == 2:
             pandas_preds = pandas_preds.ix[:, 1]
-        return pandas_preds
+        return pandas_preds.values

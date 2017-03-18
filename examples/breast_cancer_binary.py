@@ -48,7 +48,7 @@ for stype in ['t', 'cv', 'st', 's']:
                                    folds_strategy=skf)
     b_cancer.fit(X, y)
     # Get the data from the stacking for the train set.
-    b_cancer.meta_train
+    b_cancer.meta_train()
     # Make predictions.
     b_cancer.predict_proba(test_x)
     

@@ -47,4 +47,5 @@ for stype in ['t', 'cv', 'st', 's']:
                                stack_type=stype,
                                folds_strategy=skf)
     iris.fit(X, y)
+    iris.meta_train()
     iris.predict_proba(test_x)
