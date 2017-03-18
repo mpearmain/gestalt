@@ -33,7 +33,7 @@ class GeneralisedStacking:
         :param y: target
         """
         if self.estimator_type is 'classification':
-            self.num_classes = y[0].nunique()
+            self.num_classes = y.ix[:, 0].nunique()
 
         # Create a holding dataframe to populate with out of fold predictions.
         if self.estimator_type is 'classification' and self.num_classes > 2:
@@ -63,7 +63,7 @@ class GeneralisedStacking:
 
     def _fit_t(self, X, y, model_no):
         # We only run against the full dataset i.e no 'cv' information is available.
-        y = y[0].values
+        y = y.ix[:, 0].values
         self.base_estimators[model_no].fit(X, y)
         return
 
@@ -74,10 +74,10 @@ class GeneralisedStacking:
         for traincv, testcv in self.folds_strategy.split(X, y):
             # Loop over the different folds.
             # First create the different datasets to encode.
-            X_train = X.iloc[traincv]
-            X_test = X.iloc[testcv]
-            y_train = y.iloc[traincv][0].values
-            y_test = y.iloc[testcv][0].values
+            X_train = X.ix[traincv, :]
+            X_test = X.ix[testcv, :]
+            y_train = y.ix[traincv, 0].values
+            y_test = y.ix[testcv, 0].values
 
             # Fit on each fold for each model.
             self.base_estimators[model_no].fit(X_train, y_train)
@@ -104,10 +104,10 @@ class GeneralisedStacking:
 
         for traincv, testcv in self.folds_strategy.split(X, y):
             # Loop over the different folds.
-            X_train = X.iloc[traincv]
-            X_test = X.iloc[testcv]
-            y_train = y.iloc[traincv][0].values
-            y_test = y.iloc[testcv][0].values
+            X_train = X.ix[traincv, :]
+            X_test = X.ix[testcv, :]
+            y_train = y.ix[traincv, 0].values
+            y_test = y.ix[testcv, 0].values
 
             # Fit on each fold for each model.
             self.base_estimators[model_no].fit(X_train, y_train)
@@ -145,10 +145,10 @@ class GeneralisedStacking:
 
         for traincv, testcv in self.folds_strategy.split(X, y):
             # Loop over the different folds.
-            X_train = X.iloc[traincv]
-            X_test = X.iloc[testcv]
-            y_train = y.iloc[traincv][0].values
-            y_test = y.iloc[testcv][0].values
+            X_train = X.ix[traincv, :]
+            X_test = X.ix[testcv, :]
+            y_train = y.ix[traincv, 0].values
+            y_test = y.ix[testcv, 0].values
 
             # Fit on each fold for each model.
             self.base_estimators[model_no].fit(X_train, y_train)
