@@ -24,6 +24,7 @@ The current roadmap for this module is as follows:
 4. Support `scipy.sparse` data to allow both dense and sparse models to be run on the same folds
 5. Create an example of bayesian encoding as a transformer that runs across folds in line with the stacker.
 6. Create Hyper-parameter autotuning class for the set of base models to be used in the metaleaner
+7. Loads of tests and documentation.
 
 As with all OSS projects things are under constant development and already one can see places where refactoring some
 of the core code would make sense (i.e a folds Class to remove the cumbersome _predict_# and _fit_# methods)
