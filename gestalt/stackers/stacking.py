@@ -78,8 +78,6 @@ class GeneralisedStacking:
         self.stacking.fit(X, y)
 
     def predict(self, X):
-        if self.estimator_type is not 'regression':
-            raise ValueError("Predit can only be called on regression estimator_type problems")
         if self.stacking is None:
             raise ValueError("Fit must have been called before you can use `predict`")
         return self.stacking.predict(X)
