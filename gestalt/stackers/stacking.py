@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import gestalt.stackers.pandas_stacking as pd_stack
+# TODO: There is no need for this class anymore, should be refactored into stacking.py. Legacy from getting this to run.
+import gestalt.stackers.util_stacking as util_stack
 
 
 class GeneralisedStacking:
@@ -61,11 +62,11 @@ class GeneralisedStacking:
         :return:
         """
 
-        self.stacking = pd_stack.GeneralisedStacking(self.base_estimators_dict,
-                                                     self.folds_strategy,
-                                                     self.estimator_type,
-                                                     self.stack_type,
-                                                     self.feval)
+        self.stacking = util_stack.GeneralisedStacking(self.base_estimators_dict,
+                                                       self.folds_strategy,
+                                                       self.estimator_type,
+                                                       self.stack_type,
+                                                       self.feval)
         self.stacking.fit(X, y)
 
     def predict(self, X):
