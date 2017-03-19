@@ -1,20 +1,19 @@
 import numpy as np
 import pandas as pd
-
+from gestalt.utils.fold_splitter import split_folds
 
 class GeneralisedStacking:
     """
     A generalised stacking class specifically designed for use with pandas DataFrames and numpy arrays.
     """
 
-    def __init__(self, base_estimators_dict, folds_strategy, estimator_type, stack_type, feval, fold_splitter):
+    def __init__(self, base_estimators_dict, folds_strategy, estimator_type, stack_type, feval):
         self.base_estimators = list(base_estimators_dict.keys())
         self.base_estimators_names = list(base_estimators_dict.values())
         self.folds_strategy = folds_strategy
         self.estimator_type = estimator_type
         self.stack_type = stack_type
         self.feval = feval
-        self.fold_splitter = fold_splitter
         self.stacking_train = None
         self.num_classes = None
         self.fold_estimators = {}
@@ -75,7 +74,7 @@ class GeneralisedStacking:
         i = 0
         for train_index, test_index in self.folds_strategy.split(X, y):
             # Loop over the different folds.
-            X_train, X_test, y_train, y_test = self.fold_splitter(train_index, test_index, X, y)
+            X_train, X_test, y_train, y_test = split_folds(train_index, test_index, X, y)
 
             # Fit on each fold for each model.
             self.base_estimators[model_no].fit(X_train, y_train)
@@ -102,7 +101,7 @@ class GeneralisedStacking:
 
         for train_index, test_index in self.folds_strategy.split(X, y):
             # Loop over the different folds.
-            X_train, X_test, y_train, y_test = self.fold_splitter(train_index, test_index, X, y)
+            X_train, X_test, y_train, y_test = split_folds(train_index, test_index, X, y)
 
             # Fit on each fold for each model.
             self.base_estimators[model_no].fit(X_train, y_train)
@@ -140,7 +139,7 @@ class GeneralisedStacking:
 
         for train_index, test_index in self.folds_strategy.split(X, y):
             # Loop over the different folds.
-            X_train, X_test, y_train, y_test = self.fold_splitter(train_index, test_index, X, y)
+            X_train, X_test, y_train, y_test = split_folds(train_index, test_index, X, y)
 
             # Fit on each fold for each model.
             self.base_estimators[model_no].fit(X_train, y_train)
