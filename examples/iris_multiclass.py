@@ -101,7 +101,6 @@ test_x = sparse.csr_matrix(test_x)
 # y values remain as numpy arrays
 
 ########################################################################################################################
-
 estimators = {RandomForestClassifier(n_estimators=100, n_jobs=8, random_state=42): 'RFC1',
               XGBClassifier(num_round=50,
                             verbose_eval=False,
