@@ -68,7 +68,7 @@ for stype in ['t', 'cv', 'st', 's']:
 ################################################################
 # numpy test
 print("\nNumpy Test")
-# Grab data and save base
+# Grab data
 data, target = load_breast_cancer(return_X_y=True)
 X, test_x, y, test_y = train_test_split(data, target, test_size=0.1, random_state=42)
 
