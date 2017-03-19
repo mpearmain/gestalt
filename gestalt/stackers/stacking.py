@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import numpy as np
-import pandas as pd
-from scipy import sparse
-
 import gestalt.stackers.pandas_stacking as pd_stack
-import gestalt.stackers.scipy_csr_stacking as csr_stack
 
 
 class GeneralisedStacking:
@@ -16,7 +11,7 @@ class GeneralisedStacking:
     Within Gestalt we support two data types for running stackers - Dense pandas DataFrames and scipy sparse csr_matrix
     """
 
-    def __init__(self, base_estimators_dict, folds_strategy, estimator_type, stack_type, feval):
+    def __init__(self, base_estimators_dict, folds_strategy, estimator_type, stack_type, feval, fold_splitter):
         """
         :param base_estimators_dict: A dictionary of estimator type and name (this avoids the awkward arbitrary naming of
                                 columns when storing meta level information).
@@ -37,6 +32,7 @@ class GeneralisedStacking:
               -- Use this for the final level ensembler to get a feel for the loss.
         :param feval: The evaluation function e.g sklearn.metrics.log_loss.
                       This function is expected to have the following inputs feval(y_prob, y_true)
+        :param fold_splitter: A function defining how a dataset type is split. i.e pandas is different to numpy array
         """
         self.stacking = None
         # Check that the estimator is a dictionary of estimators and names.
@@ -47,6 +43,7 @@ class GeneralisedStacking:
         self.base_estimators_dict = base_estimators_dict
         self.folds_strategy = folds_strategy
         self.feval = feval
+        self.fold_splitter = fold_splitter
 
         # Check that the estimator type has been set.
         if not (estimator_type in ('classification', 'regression')):
@@ -66,15 +63,15 @@ class GeneralisedStacking:
         :return:
         """
 
-        if isinstance(X, pd.DataFrame):
-            # y is a dataframe object with one col.
-            if isinstance(y, pd.DataFrame) & y.shape[1] is 1:
-                self.stacking = pd_stack.GeneralisedStacking(self.base_estimators_dict, self.folds_strategy,
-                                                             self.estimator_type, self.stack_type, self.feval)
-        if isinstance(X, sparse.csr_matrix):
-            if isinstance(y, np.array):
-                self.stacking = csr_stack.GeneralisedStacking(self.base_estimators_dict, self.folds_strategy,
-                                                              self.estimator_type, self.stack_type, self.feval)
+        # if isinstance(X, pd.DataFrame):
+        #     # y is a dataframe object with one col.
+        #     if isinstance(y, pd.DataFrame) & y.shape[1] is 1:
+        self.stacking = pd_stack.GeneralisedStacking(self.base_estimators_dict,
+                                                     self.folds_strategy,
+                                                     self.estimator_type,
+                                                     self.stack_type,
+                                                     self.feval,
+                                                     self.fold_splitter)
         self.stacking.fit(X, y)
 
     def predict(self, X):
