@@ -24,7 +24,7 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from gestalt.utils.multiclass_logloss import mlogloss
 import pandas as pd
-
+from scipy import sparse
 ########################################################################################################################
 # Grab data
 data, target = load_iris(return_X_y=True)
@@ -65,7 +65,6 @@ for stype in ['t', 'cv', 'st', 's']:
 ################################################################
 # numpy test
 print("\nNumpy Test")
-# Grab data
 
 ########################################################################################################################
 # Grab data
@@ -88,3 +87,36 @@ for stype in ['t', 'cv', 'st', 's']:
                                folds_strategy=skf)
     iris.fit(X, y)
     iris.predict_proba(test_x)
+
+################################################################
+# Sparse test
+print("\nSparse Test")
+
+########################################################################################################################
+# Grab data
+data, target = load_iris(return_X_y=True)
+X, test_x, y, test_y = train_test_split(data, target, test_size=0.1, random_state=42)
+X = sparse.csr_matrix(X)
+test_x = sparse.csr_matrix(test_x)
+# y values remain as numpy arrays
+
+########################################################################################################################
+
+estimators = {RandomForestClassifier(n_estimators=100, n_jobs=8, random_state=42): 'RFC1',
+              XGBClassifier(num_round=50,
+                            verbose_eval=False,
+                            params={'objective': 'multi:softprob',
+                                    'num_class': 3,
+                                    'silent': 1}): 'XGB1',}
+
+for stype in ['t', 'cv', 'st', 's']:
+    iris = GeneralisedStacking(base_estimators_dict=estimators,
+                               estimator_type='classification',
+                               feval=mlogloss,
+                               stack_type=stype,
+                               folds_strategy=skf)
+    iris.fit(X, y)
+    iris.predict_proba(test_x)
+
+
+
