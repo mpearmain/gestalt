@@ -39,3 +39,5 @@ pip install -U git+https://github.com/mpearmain/gestalt
 ## Example 
 In the examples dir there is a set of examples showing various different use cases.
 To run the r wrapper for ranger you need to have a  copy of `rpy2` and a copy of the `ranger` R library locally.
+NOTE: You can even runu Vowpal Wabbit inside the stacker with the VWClasssifer and VWRegression sklearn wrappers
+from `pip install vowwpalwabbit`
