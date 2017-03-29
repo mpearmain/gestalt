@@ -34,11 +34,11 @@ of the core code would make sense (i.e a Class to remove the cumbersome `_predic
 ```python
 
 pip install -U git+https://github.com/mpearmain/gestalt
-
+```
 _____
 NOTE:
     gestalt is built using python 3.5
-```
+
 
 ## Example 
 In the examples dir there is a set of examples showing various different use cases.
