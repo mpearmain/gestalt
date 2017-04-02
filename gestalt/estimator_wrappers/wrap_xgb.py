@@ -33,13 +33,20 @@ class XGBClassifier(BaseEstimator, ClassifierMixin):
         self.verbose = verbose_eval
         self.clf = None
 
-    def fit(self, X, y):
+    def fit(self, X, y, x_val=None, y_val=None):
 
         dtrain = xgb.DMatrix(X, label=y)
+        if x_val is not None:
+            dtest = xgb.DMatrix(x_val, label=y_val)
+            watchlist = [(dtrain, 'train'), (dtest, 'validation')]
+        else:
+            watchlist = [(dtrain), 'train']
+
         self.clf = xgb.train(params=self.params,
                              dtrain=dtrain,
                              num_boost_round=self.num_round,
                              early_stopping_rounds=self.early_stopping_rounds,
+                             evals=watchlist,
                              verbose_eval=self.verbose)
         return
 

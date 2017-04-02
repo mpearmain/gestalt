@@ -117,7 +117,13 @@ class GeneralisedStacking:
             X_train, X_test, y_train, y_test = split_folds(train_index, test_index, X, y)
 
             # Fit on each fold for each model.
-            self.base_estimators[model_no].fit(X_train, y_train)
+            # We'll add a try condition here for using x_test as a validation set - useful of XGB early stopping.
+            try:
+                self.base_estimators[model_no].fit(X_train, y_train, X_test, y_test)
+            except:
+                pass
+            else:
+                self.base_estimators[model_no].fit(X_train, y_train)
             if self.estimator_type is 'regression':
                 predicted_y = self.base_estimators[model_no].predict(X_test)
             elif self.estimator_type is 'classification':
@@ -144,7 +150,11 @@ class GeneralisedStacking:
             X_train, X_test, y_train, y_test = split_folds(train_index, test_index, X, y)
 
             # Fit on each fold for each model.
-            self.base_estimators[model_no].fit(X_train, y_train)
+            # We'll add a try condition here for using x_test as a validation set - useful of XGB early stopping.
+            try:
+                self.base_estimators[model_no].fit(X_train, y_train, X_test, y_test)
+            except:
+                self.base_estimators[model_no].fit(X_train, y_train)
             # Predict on the out of fold set
             if self.estimator_type is 'regression':
                 predicted_y = self.base_estimators[model_no].predict(X_test)
@@ -183,7 +193,12 @@ class GeneralisedStacking:
             X_train, X_test, y_train, y_test = split_folds(train_index, test_index, X, y)
 
             # Fit on each fold for each model.
-            self.base_estimators[model_no].fit(X_train, y_train)
+            # We'll add a try condition here for using x_test as a validation set - useful of XGB early stopping.
+            try:
+                self.base_estimators[model_no].fit(X_train, y_train, X_test, y_test)
+            except:
+                self.base_estimators[model_no].fit(X_train, y_train)
+
             # Predict on the out of fold set
             if self.estimator_type is 'regression':
                 predicted_y = self.base_estimators[model_no].predict(X_test)
