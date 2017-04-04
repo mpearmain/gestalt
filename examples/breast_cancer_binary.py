@@ -47,10 +47,6 @@ skf = KFold(n_splits=3, random_state=42, shuffle=True)
 # Base estimators come in the form of a dictionary of {estimator1:'name1', estimator2:'name2'}
 # This makes life easy when naming the meta-learner dataset.
 estimators = {RandomForestClassifier(n_estimators=100, n_jobs=8, random_state=42): 'RFR1',
-              XGBClassifier(num_round=50,
-                            verbose_eval=False,
-                            params={'objective': 'binary:logistic',
-                                    'silent': 1}): 'XGB1',
               RangerClassifier(num_trees=50, num_threads=8, seed=42): 'Ranger1'}
 
 print("\nPandas Test")

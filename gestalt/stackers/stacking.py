@@ -336,10 +336,11 @@ class GeneralisedStacking:
             stacking_predict_proba_data.ix[:, multicol_names] = predicted_y
         return stacking_predict_proba_data
 
+    @property
     def meta_train(self):
         """
         A return method for the underlying meta data prediction from the training data set as a pandas dataframe
         Use the predict method to score new data for each classifier.
         :return: A pandas dataframe object of stacked predictions of predict
         """
-        return self.stacking.meta_train
+        return self.stacking_train
