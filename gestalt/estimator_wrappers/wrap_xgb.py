@@ -1,4 +1,3 @@
-import pandas as pd
 import xgboost as xgb
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin, ClassifierMixin
@@ -39,15 +38,17 @@ class XGBClassifier(BaseEstimator, ClassifierMixin):
         if x_val is not None:
             dtest = xgb.DMatrix(x_val, label=y_val)
             watchlist = [(dtrain, 'train'), (dtest, 'validation')]
+            self.clf = xgb.train(params=self.params,
+                                 dtrain=dtrain,
+                                 num_boost_round=self.num_round,
+                                 early_stopping_rounds=self.early_stopping_rounds,
+                                 evals=watchlist,
+                                 verbose_eval=self.verbose)
         else:
-            watchlist = [(dtrain), 'train']
-
-        self.clf = xgb.train(params=self.params,
-                             dtrain=dtrain,
-                             num_boost_round=self.num_round,
-                             early_stopping_rounds=self.early_stopping_rounds,
-                             evals=watchlist,
-                             verbose_eval=self.verbose)
+            self.clf = xgb.train(params=self.params,
+                                 dtrain=dtrain,
+                                 num_boost_round=self.num_round,
+                                 early_stopping_rounds=self.early_stopping_rounds)
         return
 
     def predict_proba(self, X):

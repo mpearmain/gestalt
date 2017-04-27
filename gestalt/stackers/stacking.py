@@ -67,17 +67,18 @@ class GeneralisedStacking:
         # Generate an index to be used to build the storage data frame.
         # If the data came from a pd.DataFrame we use that index
         index_X = np.arange(X.shape[0])
-        if isinstance(y, pd.DataFrame):
+        if isinstance(X, pd.DataFrame):
             index_X = X.index
-            if self.estimator_type is 'classification':
-                self.num_classes = y.ix[:, 0].nunique()
-        elif isinstance(y, np.ndarray):
-            if self.estimator_type is 'classification':
-                self.num_classes = len(np.unique(y))
+
+        if isinstance(y, pd.DataFrame) and self.estimator_type is 'classification':
+             y = y.values.ravel()
+
+        if self.estimator_type is 'classification':
+            self.num_classes = len(np.unique(y))
 
         # Create a holding dataframe to populate with out of fold predictions.
         if self.estimator_type is 'classification' and self.num_classes > 2:
-            # Generate the multiclass stracking trainset - as many cols as models * classes.
+            # Generate the multiclass stacking trainset - as many cols as models * classes.
             self.stacking_train = pd.DataFrame(np.nan,
                                                index=index_X,
                                                columns=[model_name + '_class_' + str(i)
@@ -103,8 +104,6 @@ class GeneralisedStacking:
 
     def _fit_t(self, X, y, model_no):
         # We only run against the full dataset i.e no 'cv' information is available.
-        if isinstance(y, pd.DataFrame):
-            y = y.ix[:, 0].values
         self.base_estimators[model_no].fit(X, y)
         return
 
