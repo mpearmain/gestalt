@@ -84,13 +84,23 @@ class XGBRegressor(BaseEstimator, RegressorMixin):
         self.verbose = verbose_eval
         self.xgb = None
 
-    def fit(self, X, y):
+    def fit(self, X, y, x_val=None, y_val=None):
         dtrain = xgb.DMatrix(X, label=y)
-        self.xgb = xgb.train(params=self.params,
-                             dtrain=dtrain,
-                             num_boost_round=self.num_round,
-                             early_stopping_rounds=self.early_stopping_rounds,
-                             verbose_eval=self.verbose)
+        if x_val is not None:
+            dtest = xgb.DMatrix(x_val, label=y_val)
+            watchlist = [(dtrain, 'train'), (dtest, 'validation')]
+            self.xgb = xgb.train(params=self.params,
+                                 dtrain=dtrain,
+                                 num_boost_round=self.num_round,
+                                 early_stopping_rounds=self.early_stopping_rounds,
+                                 evals=watchlist,
+                                 verbose_eval=self.verbose)
+        else:
+            self.xgb = xgb.train(params=self.params,
+                                 dtrain=dtrain,
+                                 num_boost_round=self.num_round,
+                                 early_stopping_rounds=self.early_stopping_rounds,
+                                 verbose_eval=self.verbose)
         return
 
     def predict(self, X):
