@@ -171,8 +171,6 @@ class GeneralisedStacking:
             # Evaluate the Folds
             if self.feval is not None:
                 assert (len(y_test) == len(predicted_y))
-                print(y_test)
-                print(predicted_y)
                 fold_score = self.feval(y_test, predicted_y)
                 evals.append(fold_score)
                 print('Fold{}: {}'.format(i + 1, evals[i]))
