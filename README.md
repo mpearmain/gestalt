@@ -48,3 +48,6 @@ ___
 NOTE:
 You can even run Vowpal Wabbit inside the stacker with the VWClasssifer and VWRegression sklearn wrappers
 from `pip install vowpalwabbit`
+
+Another project to use [R](https://cran.r-project.org/) models being used in a scikit-learn style suitable for gestalt can be found here:
+https://github.com/mpearmain/scikit-wrapRs
