@@ -120,9 +120,8 @@ class GeneralisedStacking:
             try:
                 self.base_estimators[model_no].fit(X_train, y_train, X_test, y_test)
             except:
-                pass
-            else:
                 self.base_estimators[model_no].fit(X_train, y_train)
+                
             if self.estimator_type is 'regression':
                 predicted_y = self.base_estimators[model_no].predict(X_test)
             elif self.estimator_type is 'classification':
