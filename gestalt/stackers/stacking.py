@@ -323,7 +323,7 @@ class GeneralisedStacking:
         predicted_y = 0
         for estimator in self.fold_estimators[self.base_estimators_names[model_no]].values():
             predicted_y += estimator.predict_proba(X)
-        predicted_y /= self.folds_strategy.n_splits
+        predicted_y / self.folds_strategy.n_splits
 
         if self.num_classes == 2:
             if 'sklearn' in str(type(self.base_estimators[model_no])):
